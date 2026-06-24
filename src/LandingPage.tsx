@@ -96,7 +96,7 @@ export default function LandingPage() {
       />
 
       {/* Header Banner */}
-      <div style={{ position: "absolute", top: "15px", left: "15px", right: "15px", padding: "6px 30px", borderRadius: "12px", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "white", zIndex: 10, boxShadow: "0 4px 15px rgba(0,0,0,0.1)", boxSizing: "border-box" }}>
+      <div style={{ position: "absolute", top: "15px", left: "15px", right: "15px", padding: "12px 30px", borderRadius: "12px", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "white", zIndex: 10, boxShadow: "0 4px 15px rgba(0,0,0,0.1)", boxSizing: "border-box" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1, minWidth: 0 }}>
           <span style={{ fontSize: 14, color: "#000000", fontWeight: 700, letterSpacing: "0.3px", wordWrap: "break-word" }}>
             Decanato de Planejamento, Orçamento e Avaliação Institucional - DPO
@@ -104,13 +104,6 @@ export default function LandingPage() {
           <span style={{ fontSize: 12, color: "#000000", fontWeight: 600, letterSpacing: "0.2px", wordWrap: "break-word" }}>
             Diretoria de Orçamento - DOR
           </span>
-        </div>
-        <div style={{ flexShrink: 0, marginLeft: "10px" }}>
-          <img 
-            src="/inova_gestao.png" 
-            alt="Inova Gestão" 
-            style={{ height: 80, objectFit: "contain" }} 
-          />
         </div>
       </div>
 
