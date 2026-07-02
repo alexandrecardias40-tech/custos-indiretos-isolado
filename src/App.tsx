@@ -42,7 +42,7 @@ function MultiSel({label,opts,sel,set}:{label:string;opts:string[];sel:string[];
                 <span style={{fontSize:12,fontWeight:700,color:"#2563eb"}}>Todos</span>
               </div>
             )}
-            <CommandList>
+            <CommandList style={{ maxHeight: "250px", overflowY: "auto" }}>
               <CommandEmpty>Nenhum.</CommandEmpty>
               <CommandGroup>
                 {opts.map(o=>(
