@@ -352,7 +352,7 @@ export default function ComparativosPage() {
                 <Target size={15} style={{ color:"#34d399" }}/> Destaques
               </div>
               {[
-                { label:"Maior Pendência (Unidade)",     value:D.maisPendente?.cc||"—",    sub:fmt(D.maisPendente?.a_ress||0), color:"#f87171" },
+                { label:"Maior Aguardando Finan. (Unidade)",     value:D.maisPendente?.cc||"—",    sub:fmt(D.maisPendente?.a_ress||0), color:"#f87171" },
                 { label:"Maior Ressarcimento (Unidade)", value:D.maisRessarcida?.cc||"—",  sub:fmt(D.maisRessarcida?.ress||0), color:"#34d399" },
                 { label:"Total de Unidades",             value:`${D.nCC} centros`,          sub:"com dados cruzados",                 color:"#60a5fa" },
               ].map(h=>(
@@ -369,7 +369,7 @@ export default function ComparativosPage() {
               <div style={{ fontWeight:700, fontSize:13, color:"#0f172a", marginBottom:12 }}>Status Global</div>
               {[
                 { label:"🟢 Ressarcidos",  n:D.totVerde,               color:"#22c55e", bg:"#f0fdf4" },
-                { label:"🔴 Pendentes",    n:D.totVerm,                 color:"#ef4444", bg:"#fff5f5" },
+                { label:"🔴 Aguardando Financeiro",    n:D.totVerm,                 color:"#ef4444", bg:"#fff5f5" },
                 { label:"🟡 Parciais",     n:filteredData.length-D.totVerde-D.totVerm, color:"#eab308", bg:"#fefce8" },
               ].map(r=>(
                 <div key={r.label} style={{ marginBottom:10 }}>

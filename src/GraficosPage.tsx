@@ -81,7 +81,7 @@ function buildByCC(data: any[]) {
 const SEMAFOR: Record<string,{bg:string;border:string;color:string;label:string}> = {
   verde:    {bg:"#dcfce7",border:"#86efac",color:"#166534",label:"Ressarcido"},
   amarelo:  {bg:"#fef9c3",border:"#fde047",color:"#713f12",label:"Parcial"},
-  vermelho: {bg:"#fee2e2",border:"#fca5a5",color:"#991b1b",label:"Pendente"},
+  vermelho: {bg:"#fee2e2",border:"#fca5a5",color:"#991b1b",label:"Aguardando Financeiro"},
 };
 
 function DetailPanel({ cc, onBack }: { cc: any; onBack: ()=>void }) {
@@ -183,7 +183,7 @@ function DetailPanel({ cc, onBack }: { cc: any; onBack: ()=>void }) {
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
           {[
             { label:"🟢 Ressarcidos",  n:stats.verde,  color:"#22c55e", bg:"#f0fdf4" },
-            { label:"🔴 Pendentes",    n:stats.vermelho,   color:"#ef4444", bg:"#fff5f5" },
+            { label:"🔴 Aguardando Financeiro",    n:stats.vermelho,   color:"#ef4444", bg:"#fff5f5" },
           ].map(r => (
             <div key={r.label} style={{ background:r.bg, borderRadius:8, padding:"12px 14px", border:`1px solid ${r.color}33` }}>
               <div style={{ fontSize:11, fontWeight:600, color:"#374151" }}>{r.label}</div>

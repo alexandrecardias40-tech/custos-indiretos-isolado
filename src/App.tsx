@@ -17,8 +17,9 @@ const pct = (a:number,b:number) => b>0 ? ((a/b)*100).toFixed(1)+"%" : "0%";
 const SEMAFOR: Record<string,{bg:string;border:string;color:string;label:string;icon:string}> = {
   verde:        {bg:"#dcfce7",border:"#86efac",color:"#166534",label:"Ressarcido",icon:"●"},
   a_ressarcir:  {bg:"#fee2e2",border:"#fca5a5",color:"#991b1b",label:"A Ressarcir",icon:"○"},
-  pendente:     {bg:"#fffbeb",border:"#fde68a",color:"#92400e",label:"Pendente",icon:"⊖"},
+  pendente:     {bg:"#fffbeb",border:"#fde68a",color:"#92400e",label:"Aguardando Financeiro",icon:"⊖"},
 };
+
 
 export function getRecordStatus(d: any) {
   const isEmenda = d.fonte === "Emenda";
@@ -251,7 +252,7 @@ export default function App() {
               style={{padding:"4px 10px",border:"1px solid #d1d5db",borderRadius:6,fontSize:11,background:"white",cursor:"pointer",width:168}}>
               <option value="all">Todos</option>
               <option value="verde">🟢 Ressarcido</option>
-              <option value="pendente">🟡 Pendente</option>
+              <option value="pendente">🟡 Aguardando Financeiro</option>
               <option value="a_ressarcir">🔴 A Ressarcir</option>
             </select>
           </div>
