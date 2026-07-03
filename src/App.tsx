@@ -15,9 +15,40 @@ const fmtK = (v: number) => !v||isNaN(v) ? "—" : new Intl.NumberFormat("pt-BR"
 const pct = (a:number,b:number) => b>0 ? ((a/b)*100).toFixed(1)+"%" : "0%";
 
 const SEMAFOR: Record<string,{bg:string;border:string;color:string;label:string;icon:string}> = {
-  verde:    {bg:"#dcfce7",border:"#86efac",color:"#166534",label:"Ressarcido",icon:"●"},
-  vermelho: {bg:"#fee2e2",border:"#fca5a5",color:"#991b1b",label:"Pendente",icon:"○"},
+  verde:        {bg:"#dcfce7",border:"#86efac",color:"#166534",label:"Ressarcido",icon:"●"},
+  a_ressarcir:  {bg:"#fee2e2",border:"#fca5a5",color:"#991b1b",label:"A Ressarcir",icon:"○"},
+  pendente:     {bg:"#fffbeb",border:"#fde68a",color:"#92400e",label:"Pendente",icon:"⊖"},
 };
+
+export function getRecordStatus(d: any) {
+  const isEmenda = d.fonte === "Emenda";
+  const emp = Number(d.empenhado) || 0;
+  const pago = Number(d.total_pago_tg) || 0;
+  
+  let resVal: number | null = null;
+  let aResVal: number | null = null;
+  
+  if (isEmenda) {
+    const a = Number(d.a_ressarcir) || 0;
+    const r = Number(d.ressarcido) || 0;
+    const canHaveRessarcir = (emp > 0 && pago > 0);
+    resVal = r > 0 ? r / 2 : null;
+    aResVal = (a > 0 && canHaveRessarcir) ? a / 2 : null;
+  } else {
+    if (d.semaforo === 'verde') {
+      resVal = pago / 2;
+    } else if (emp > 0 && pago > 0) {
+      aResVal = pago / 2;
+    }
+  }
+  
+  const isRessarcido = resVal !== null;
+  const isARessarcir = aResVal !== null;
+  
+  if (isRessarcido) return "verde";
+  if (isARessarcir) return "a_ressarcir";
+  return "pendente";
+}
 
 
 
@@ -152,7 +183,7 @@ export default function App() {
     return allData.filter((d:any)=>{
       const cc=(d.centro_custo||"").trim();
       if(selUnidade.length>0&&!selUnidade.includes(cc)) return false;
-      if(selSemaforo!=="all"&&d.semaforo!==selSemaforo) return false;
+      if(selSemaforo!=="all"&&getRecordStatus(d)!==selSemaforo) return false;
       if(selAno!=="all"&&String(d.ano)!==selAno) return false;
       if(selFonte!=="all"&&d.fonte!==selFonte) return false;
       return true;
@@ -220,7 +251,8 @@ export default function App() {
               style={{padding:"4px 10px",border:"1px solid #d1d5db",borderRadius:6,fontSize:11,background:"white",cursor:"pointer",width:168}}>
               <option value="all">Todos</option>
               <option value="verde">🟢 Ressarcido</option>
-              <option value="vermelho">🔴 Pendente</option>
+              <option value="pendente">🟡 Pendente</option>
+              <option value="a_ressarcir">🔴 A Ressarcir</option>
             </select>
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:3,alignItems:"center"}}>
@@ -300,7 +332,8 @@ export default function App() {
               </thead>
               <tbody>
                 {filtered.map((d:any,i:number)=>{
-                  const sem = SEMAFOR[d.semaforo]||SEMAFOR.vermelho;
+                  const statusKey = getRecordStatus(d);
+                  const sem = SEMAFOR[statusKey]||SEMAFOR.pendente;
                   return (
                     <tr key={i} style={{background:i%2===0?"white":"#fafafa"}}>
                       <td style={s.td}>
