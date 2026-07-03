@@ -252,8 +252,8 @@ export default function App() {
               style={{padding:"4px 10px",border:"1px solid #d1d5db",borderRadius:6,fontSize:11,background:"white",cursor:"pointer",width:168}}>
               <option value="all">Todos</option>
               <option value="verde">🟢 Ressarcido</option>
-              <option value="pendente">🟡 Aguardando Financeiro</option>
               <option value="a_ressarcir">🔴 A Ressarcir</option>
+              <option value="pendente">🟡 Aguardando Financeiro</option>
             </select>
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:3,alignItems:"center"}}>
