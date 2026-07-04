@@ -87,6 +87,14 @@ const SEMAFOR: Record<string,{bg:string;border:string;color:string;label:string}
 function DetailPanel({ cc, onBack }: { cc: any; onBack: ()=>void }) {
   const [selAno, setSelAno] = useState("all");
   const [selFonte, setSelFonte] = useState("all");
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const s = {
     card: { background:"white", borderRadius:10, border:"1px solid #e2e8f0", boxShadow:"0 1px 4px rgba(0,0,0,0.06)", padding:"14px 16px" } as React.CSSProperties,
@@ -162,7 +170,7 @@ function DetailPanel({ cc, onBack }: { cc: any; onBack: ()=>void }) {
       </div>
 
       {/* KPIs principais */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))", gap:12 }}>
+      <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"repeat(auto-fit,minmax(180px,1fr))", gap:12 }}>
         {[
           { label:<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Total Empenhado <FonteBadge fonte={selFonte} size="xs" /></span>,  value:fmt(stats.empenhado),   color:"#3b82f6", sub:"Tesouro Gerencial",                      icon:"📋" },
           { label:<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Total Pago (TG) <FonteBadge fonte={selFonte} size="xs" /></span>,  value:fmt(stats.total_pago_tg),color:"#10b981", sub:pct(stats.total_pago_tg,stats.empenhado)+" do empenhado", icon:"💳" },
@@ -180,7 +188,7 @@ function DetailPanel({ cc, onBack }: { cc: any; onBack: ()=>void }) {
       {/* Semáforo de ressarcimento */}
       <div style={{ ...s.card }}>
         <div style={{ fontWeight:700, fontSize:13, color:"#0f172a", marginBottom:12 }}>Status de Ressarcimento</div>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+        <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"1fr 1fr", gap:12 }}>
           {[
             { label:"🟢 Ressarcidos",  n:stats.verde,  color:"#22c55e", bg:"#f0fdf4" },
             { label:"🔴 Aguardando Financeiro",    n:stats.vermelho,   color:"#ef4444", bg:"#fff5f5" },
@@ -281,6 +289,14 @@ function DetailPanel({ cc, onBack }: { cc: any; onBack: ()=>void }) {
 export default function GraficosPage() {
   const { data: rawData, loading } = useData();
   const [selected, setSelected] = useState<any>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const allData = useMemo(() => {
     return rawData.map((d: any) => {

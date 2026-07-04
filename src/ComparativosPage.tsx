@@ -159,6 +159,14 @@ export default function ComparativosPage() {
   const { data: rawData, loading } = useData();
   const [selAno, setSelAno] = useState("all");
   const [selFonte, setSelFonte] = useState("all");
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const all = useMemo(() => {
     return rawData.map((d: any) => {
@@ -212,10 +220,10 @@ export default function ComparativosPage() {
       <div style={{ display:"flex", flexDirection:"column", gap:24 }}>
 
         {/* ── Header ── */}
-        <div style={{ borderBottom:"1px solid #e2e8f0", paddingBottom:18, display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:14 }}>
+        <div style={{ borderBottom:"1px solid #e2e8f0", paddingBottom:18, display:"flex", justifyContent:"space-between", alignItems:isMobile?"flex-start":"center", flexWrap:"wrap", flexDirection:isMobile?"column":"row", gap:14 }}>
           <div>
-            <h1 style={{ fontSize:26, fontWeight:800, color:"#0f172a", margin:0, letterSpacing:"-0.5px", display:"flex", alignItems:"center" }}>
-              Painel de Inteligência — Custos Indiretos <FonteBadge fonte={selFonte} size="lg" />
+            <h1 style={{ fontSize:isMobile?20:26, fontWeight:800, color:"#0f172a", margin:0, letterSpacing:"-0.5px", display:"flex", alignItems:isMobile?"flex-start":"center", flexDirection:isMobile?"column":"row", gap:isMobile?6:10 }}>
+              Painel de Inteligência — Custos Indiretos <FonteBadge fonte={selFonte} size={isMobile?"sm":"lg"} />
             </h1>
             <p style={{ fontSize:13, color:"#64748b", marginTop:4 }}>
               Visão estratégica de execução, ressarcimento e comparativos por unidade e ano · {filteredData.length} registros · {D.nCC} unidades
@@ -312,7 +320,7 @@ export default function ComparativosPage() {
         </div>
 
         {/* ── Evolução por Ano + Painel lateral ── */}
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 300px", gap:16, alignItems:"start" }}>
+        <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"1fr 300px", gap:16, alignItems:"start" }}>
 
           {/* Area chart por ano */}
           <div style={{ ...s.card, padding:0, overflow:"hidden" }}>

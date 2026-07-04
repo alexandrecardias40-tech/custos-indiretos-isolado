@@ -53,13 +53,13 @@ export function getRecordStatus(d: any) {
 
 
 
-function MultiSel({label,opts,sel,set}:{label:string;opts:string[];sel:string[];set:(v:string[])=>void}) {
+function MultiSel({label,opts,sel,set,isMobile}:{label:string;opts:string[];sel:string[];set:(v:string[])=>void;isMobile?:boolean}) {
   return (
-    <div style={{display:"flex",flexDirection:"column",gap:3,alignItems:"center"}}>
-      <span style={{fontSize:11,fontWeight:600,color:"#374151"}}>{label}</span>
+    <div style={{display:"flex",flexDirection:"column",gap:3,alignItems:isMobile?"stretch":"center",width:isMobile?"100%":"auto"}}>
+      <span style={{fontSize:11,fontWeight:600,color:"#374151",textAlign:isMobile?"left":"center"}}>{label}</span>
       <Popover>
         <PopoverTrigger asChild>
-          <button style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"4px 10px",border:"1px solid #d1d5db",borderRadius:6,background:"white",fontSize:11,cursor:"pointer",width:168,gap:4}}>
+          <button style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"4px 10px",border:"1px solid #d1d5db",borderRadius:6,background:"white",fontSize:11,cursor:"pointer",width:isMobile?"100%":168,gap:4}}>
             <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sel.length>0?`${sel.length} selecionado(s)`:"Todos"}</span>
             <ChevronDown size={13} style={{opacity:0.5,flexShrink:0}}/>
           </button>
@@ -145,6 +145,14 @@ export function calcUnidadeValues(d: any) {
 
 export default function App() {
   const { data: rawData, loading } = useData();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const allData = useMemo(() => {
     return rawData.map((d: any) => {
@@ -235,8 +243,8 @@ export default function App() {
 
         {/* Header */}
         <div>
-          <h1 style={{fontSize:26,fontWeight:800,color:"#0f172a",margin:0,display:"flex",alignItems:"center"}}>
-            Dashboard Custos Indiretos <FonteBadge fonte={selFonte} size="lg" />
+          <h1 style={{fontSize:isMobile?20:26,fontWeight:800,color:"#0f172a",margin:0,display:"flex",alignItems:isMobile?"flex-start":"center",flexDirection:isMobile?"column":"row",gap:isMobile?6:10}}>
+            Dashboard Custos Indiretos <FonteBadge fonte={selFonte} size={isMobile?"sm":"lg"} />
           </h1>
           <p style={{fontSize:13,color:"#64748b",marginTop:4,margin:"4px 0 0"}}>
             Painel Integrado: Controle Manual + Tesouro Gerencial · {filtered.length} registros
@@ -244,44 +252,58 @@ export default function App() {
         </div>
 
         {/* Filters */}
-        <div style={{...s.panel,padding:"14px 16px",display:"flex",flexWrap:"wrap",gap:12,alignItems:"flex-end"}}>
-          <MultiSel label="Unidade / Centro de Custo" opts={unidades} sel={selUnidade} set={setSelUnidade}/>
-          <div style={{display:"flex",flexDirection:"column",gap:3,alignItems:"center"}}>
-            <span style={{fontSize:11,fontWeight:600,color:"#374151"}}>Status Ressarcimento</span>
+        <div style={{
+          ...s.panel,
+          padding:"14px 16px",
+          display: isMobile ? "grid" : "flex",
+          gridTemplateColumns: isMobile ? "1fr 1fr" : "none",
+          flexWrap: isMobile ? undefined : "wrap",
+          gap: 12,
+          alignItems: "stretch"
+        }}>
+          <div style={{ gridColumn: isMobile ? "span 2" : "auto" }}>
+            <MultiSel label="Unidade / Centro de Custo" opts={unidades} sel={selUnidade} set={setSelUnidade} isMobile={isMobile}/>
+          </div>
+          
+          <div style={{display:"flex",flexDirection:"column",gap:3,alignItems:isMobile?"stretch":"center"}}>
+            <span style={{fontSize:11,fontWeight:600,color:"#374151",textAlign:isMobile?"left":"center"}}>Status Ressarcimento</span>
             <select value={selSemaforo} onChange={e=>setSelSemaforo(e.target.value)}
-              style={{padding:"4px 10px",border:"1px solid #d1d5db",borderRadius:6,fontSize:11,background:"white",cursor:"pointer",width:168}}>
+              style={{padding:"4px 10px",border:"1px solid #d1d5db",borderRadius:6,fontSize:11,background:"white",cursor:"pointer",width:"100%"}}>
               <option value="all">Todos</option>
               <option value="verde">🟢 Ressarcido</option>
               <option value="a_ressarcir">🔴 A Ressarcir</option>
               <option value="pendente">🟡 Aguardando Financeiro</option>
             </select>
           </div>
-          <div style={{display:"flex",flexDirection:"column",gap:3,alignItems:"center"}}>
-            <span style={{fontSize:11,fontWeight:600,color:"#374151"}}>Ano</span>
+          
+          <div style={{display:"flex",flexDirection:"column",gap:3,alignItems:isMobile?"stretch":"center"}}>
+            <span style={{fontSize:11,fontWeight:600,color:"#374151",textAlign:isMobile?"left":"center"}}>Ano</span>
             <select value={selAno} onChange={e=>setSelAno(e.target.value)}
-              style={{padding:"4px 10px",border:"1px solid #d1d5db",borderRadius:6,fontSize:11,background:"white",cursor:"pointer",width:100}}>
+              style={{padding:"4px 10px",border:"1px solid #d1d5db",borderRadius:6,fontSize:11,background:"white",cursor:"pointer",width:"100%"}}>
               <option value="all">Todos</option>
               {anos.map(a=><option key={a} value={String(a)}>{a}</option>)}
             </select>
           </div>
-          <div style={{display:"flex",flexDirection:"column",gap:3,alignItems:"center"}}>
-            <div style={{fontSize:11,fontWeight:600,color:"#374151", display: "flex", gap: 4, alignItems: "center"}}>
+          
+          <div style={{display:"flex",flexDirection:"column",gap:3,alignItems:isMobile?"stretch":"center", gridColumn: isMobile ? "span 2" : "auto"}}>
+            <div style={{fontSize:11,fontWeight:600,color:"#374151", display: "flex", gap: 4, alignItems: "center", justifyContent: isMobile ? "flex-start" : "center"}}>
               Origem
               <span style={{background: "#e2e8f0", color: "#1e293b", padding: "2px 6px", borderRadius: 4, fontSize: 10, fontWeight: 700}}>
                 {selFonte === "all" ? "TED / EMENDA" : selFonte.toUpperCase()}
               </span>
             </div>
             <select value={selFonte} onChange={e=>setSelFonte(e.target.value)}
-              style={{padding:"4px 10px",border:"1px solid #d1d5db",borderRadius:6,fontSize:11,background:"white",cursor:"pointer",width:160}}>
+              style={{padding:"4px 10px",border:"1px solid #d1d5db",borderRadius:6,fontSize:11,background:"white",cursor:"pointer",width:"100%"}}>
               <option value="all">Todas as Origens</option>
               <option value="TED">Somente TED</option>
               <option value="Emenda">Somente Emenda</option>
             </select>
           </div>
+          
           {hasFilter&&(
             <button onClick={()=>{setSelUnidade([]);setSelSemaforo("all");setSelAno("all");setSelFonte("all");}}
-              style={{display:"flex",alignItems:"center",gap:4,padding:"5px 11px",border:"1px solid #d1d5db",borderRadius:6,background:"white",fontSize:11,cursor:"pointer",alignSelf:"flex-end"}}>
-              <X size={12}/> Limpar
+              style={{display:"flex",alignItems:"center",justifyContent:"center",gap:4,padding:"6px 11px",border:"1px solid #d1d5db",borderRadius:6,background:"white",fontSize:11,cursor:"pointer",alignSelf:isMobile?"stretch":"flex-end",gridColumn:isMobile?"span 2":"auto"}}>
+              <X size={12}/> Limpar Filtros
             </button>
           )}
         </div>
@@ -289,7 +311,7 @@ export default function App() {
         {/* KPIs Row 1 — Tesouro Gerencial */}
         <div>
           <div style={{fontSize:11,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>📊 Execução Financeira — Tesouro Gerencial</div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(185px,1fr))",gap:10}}>
+          <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(auto-fit,minmax(185px,1fr))",gap:10}}>
             <KpiCard title={<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Total Empenhado <FonteBadge fonte={selFonte} size="xs" /></span>}  value={fmt(T.empenhado)}  sub={`base TG`}                           color="#3b82f6" icon="📋"/>
             <KpiCard title={<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Total Pago (TG) <FonteBadge fonte={selFonte} size="xs" /></span>}  value={fmt(T.pago_tg)}    sub={pct(T.pago_tg,T.empenhado)}         color="#10b981" icon="💳"/>
             <KpiCard title={<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Total a Pagar <FonteBadge fonte={selFonte} size="xs" /></span>}    value={fmt(T.empenhado - T.pago_tg)} sub={`${pct(T.empenhado - T.pago_tg,T.empenhado)} do empenhado`} color="#f59e0b" icon="⏳"/>
@@ -299,7 +321,7 @@ export default function App() {
         {/* KPIs Row 2 — Partilha de Recursos (50% / 50%) */}
         <div>
           <div style={{fontSize:11,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>🤝 Partilha de Custos Indiretos (50% / 50%)</div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(185px,1fr))",gap:10}}>
+          <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(auto-fit,minmax(185px,1fr))",gap:10}}>
             <KpiCard title={<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Pago à Unidade (50%) <FonteBadge fonte={selFonte} size="xs" /></span>} value={fmt(T.pago_tg / 2)} sub="Destinado à Unidade Executora" color="#6366f1" icon="🏢"/>
             <KpiCard title={<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Pago à UnB (50%) <FonteBadge fonte={selFonte} size="xs" /></span>}     value={fmt(T.pago_tg / 2)} sub="Destinado à Administração Central" color="#ec4899" icon="🏛️"/>
           </div>
@@ -308,7 +330,7 @@ export default function App() {
         {/* KPIs Row 3 — Controle de Ressarcimento — Base Manual */}
         <div>
           <div style={{fontSize:11,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>🗂️ Controle de Ressarcimento — Base Manual</div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(185px,1fr))",gap:10}}>
+          <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(auto-fit,minmax(185px,1fr))",gap:10}}>
             <KpiCard title={<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Ressarcido (Unidade) <FonteBadge fonte={selFonte} size="xs" /></span>}  value={fmt(T.ressarcido)}  sub={pct(T.ressarcido,T.total_ci / 2)}  color="#14b8a6" icon="💰"/>
             <KpiCard title={<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>A Ressarcir (Unidade) <FonteBadge fonte={selFonte} size="xs" /></span>} value={fmt(T.a_ressarcir)} sub={pct(T.a_ressarcir,T.total_ci / 2)} color="#ef4444" icon="⚠️"/>
           </div>
