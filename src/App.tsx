@@ -143,6 +143,113 @@ export function calcUnidadeValues(d: any) {
   return { aRessarcirVal, ressarcidoVal };
 }
 
+function ProcessCard({ d, sem, aRessarcirVal, ressarcidoVal }: { d: any; sem: any; aRessarcirVal: number | null; ressarcidoVal: number | null }) {
+  const [expanded, setExpanded] = useState(false);
+  
+  return (
+    <div 
+      onClick={() => setExpanded(!expanded)}
+      style={{
+        background: "white",
+        borderRadius: 12,
+        border: "1px solid #e2e8f0",
+        borderLeft: `5px solid ${sem.color}`,
+        boxShadow: "0 2px 6px rgba(0,0,0,0.03)",
+        padding: "14px 16px",
+        cursor: "pointer",
+        transition: "all 0.2s ease"
+      }}
+    >
+      {/* Linha Superior: Status e NE */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+        <span style={{
+          display: "inline-block",
+          padding: "2px 8px",
+          borderRadius: 12,
+          border: `1px solid ${sem.border}`,
+          background: sem.bg,
+          color: sem.color,
+          fontSize: 10,
+          fontWeight: 700
+        }}>
+          {sem.icon} {sem.label}
+        </span>
+        <span style={{ fontSize: 11, color: "#6366f1", fontWeight: 700 }}>
+          {d.ne_key || "NE s/ Código"}
+        </span>
+      </div>
+
+      {/* Linha do Meio: SEI e Unidade */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11, color: "#475569", marginBottom: 12 }}>
+        <span style={{ fontWeight: 600 }}>
+          Unidade: <span style={{ color: "#0f172a" }}>{d.centro_custo || "—"}</span>
+        </span>
+        <span style={{ color: "#64748b" }}>
+          SEI: {d.sei || "—"}
+        </span>
+      </div>
+
+      {/* Valores em micro-grade */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr 1fr",
+        background: "#f8fafc",
+        borderRadius: 8,
+        padding: "8px 10px",
+        textAlign: "center",
+        fontSize: 10,
+        gap: 6
+      }}>
+        <div>
+          <div style={{ color: "#64748b", marginBottom: 2 }}>Empenhado</div>
+          <div style={{ fontWeight: 700, color: "#1e293b" }}>{d.empenhado > 0 ? fmtK(d.empenhado) : "—"}</div>
+        </div>
+        <div>
+          <div style={{ color: "#64748b", marginBottom: 2 }}>Pago (TG)</div>
+          <div style={{ fontWeight: 700, color: "#1e293b" }}>{d.total_pago_tg > 0 ? fmtK(d.total_pago_tg) : "—"}</div>
+        </div>
+        <div>
+          <div style={{ color: "#64748b", marginBottom: 2 }}>Ressarcido</div>
+          <div style={{ fontWeight: 700, color: "#10b981" }}>{ressarcidoVal !== null ? fmtK(ressarcidoVal) : "—"}</div>
+        </div>
+      </div>
+
+      {/* Seção Expandida (Acordeão) */}
+      {expanded && (
+        <div style={{
+          marginTop: 12,
+          paddingTop: 12,
+          borderTop: "1px dashed #e2e8f0",
+          fontSize: 10.5,
+          color: "#475569",
+          display: "flex",
+          flexDirection: "column",
+          gap: 6
+        }}>
+          {d.favorecido && (
+            <div>
+              <span style={{ fontWeight: 600 }}>Favorecido:</span> {d.favorecido}
+            </div>
+          )}
+          {d.num_ted && (
+            <div>
+              <span style={{ fontWeight: 600 }}>TED:</span> {d.num_ted}
+            </div>
+          )}
+          {d.vigencia && (
+            <div>
+              <span style={{ fontWeight: 600 }}>Vigência:</span> {d.vigencia.split(' ')[0]}
+            </div>
+          )}
+          <div>
+            <span style={{ fontWeight: 600 }}>A Ressarcir:</span> <span style={{ color: "#ef4444", fontWeight: 700 }}>{aRessarcirVal !== null ? fmtK(aRessarcirVal) : "—"}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function App() {
   const { data: rawData, loading } = useData();
   const [isMobile, setIsMobile] = useState(false);
@@ -173,6 +280,8 @@ export default function App() {
   const [selSemaforo, setSelSemaforo] = useState("all");
   const [selAno, setSelAno] = useState("all");
   const [selFonte, setSelFonte] = useState("all");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [activeSlide, setActiveSlide] = useState(0);
 
   const unidades = useMemo(()=>Array.from(new Set(allData.map((d:any)=>(d.centro_custo||"").trim()).filter(Boolean))).sort() as string[],[allData]);
   const anos = useMemo(() => {
@@ -251,100 +360,358 @@ export default function App() {
           </p>
         </div>
 
-        {/* Filters */}
-        <div style={{
-          ...s.panel,
-          padding:"14px 16px",
-          display: isMobile ? "grid" : "flex",
-          gridTemplateColumns: isMobile ? "1fr 1fr" : "none",
-          flexWrap: isMobile ? undefined : "wrap",
-          gap: 12,
-          alignItems: "stretch"
-        }}>
-          <div style={{ gridColumn: isMobile ? "span 2" : "auto" }}>
-            <MultiSel label="Unidade / Centro de Custo" opts={unidades} sel={selUnidade} set={setSelUnidade} isMobile={isMobile}/>
-          </div>
-          
-          <div style={{display:"flex",flexDirection:"column",gap:3,alignItems:isMobile?"stretch":"center"}}>
-            <span style={{fontSize:11,fontWeight:600,color:"#374151",textAlign:isMobile?"left":"center"}}>Status Ressarcimento</span>
-            <select value={selSemaforo} onChange={e=>setSelSemaforo(e.target.value)}
-              style={{padding:"4px 10px",border:"1px solid #d1d5db",borderRadius:6,fontSize:11,background:"white",cursor:"pointer",width:"100%"}}>
-              <option value="all">Todos</option>
-              <option value="verde">🟢 Ressarcido</option>
-              <option value="a_ressarcir">🔴 A Ressarcir</option>
-              <option value="pendente">🟡 Aguardando Financeiro</option>
-            </select>
-          </div>
-          
-          <div style={{display:"flex",flexDirection:"column",gap:3,alignItems:isMobile?"stretch":"center"}}>
-            <span style={{fontSize:11,fontWeight:600,color:"#374151",textAlign:isMobile?"left":"center"}}>Ano</span>
-            <select value={selAno} onChange={e=>setSelAno(e.target.value)}
-              style={{padding:"4px 10px",border:"1px solid #d1d5db",borderRadius:6,fontSize:11,background:"white",cursor:"pointer",width:"100%"}}>
-              <option value="all">Todos</option>
-              {anos.map(a=><option key={a} value={String(a)}>{a}</option>)}
-            </select>
-          </div>
-          
-          <div style={{display:"flex",flexDirection:"column",gap:3,alignItems:isMobile?"stretch":"center", gridColumn: isMobile ? "span 2" : "auto"}}>
-            <div style={{fontSize:11,fontWeight:600,color:"#374151", display: "flex", gap: 4, alignItems: "center", justifyContent: isMobile ? "flex-start" : "center"}}>
-              Origem
-              <span style={{background: "#e2e8f0", color: "#1e293b", padding: "2px 6px", borderRadius: 4, fontSize: 10, fontWeight: 700}}>
-                {selFonte === "all" ? "TED / EMENDA" : selFonte.toUpperCase()}
-              </span>
-            </div>
-            <select value={selFonte} onChange={e=>setSelFonte(e.target.value)}
-              style={{padding:"4px 10px",border:"1px solid #d1d5db",borderRadius:6,fontSize:11,background:"white",cursor:"pointer",width:"100%"}}>
-              <option value="all">Todas as Origens</option>
-              <option value="TED">Somente TED</option>
-              <option value="Emenda">Somente Emenda</option>
-            </select>
-          </div>
-          
-          {hasFilter&&(
-            <button onClick={()=>{setSelUnidade([]);setSelSemaforo("all");setSelAno("all");setSelFonte("all");}}
-              style={{display:"flex",alignItems:"center",justifyContent:"center",gap:4,padding:"6px 11px",border:"1px solid #d1d5db",borderRadius:6,background:"white",fontSize:11,cursor:"pointer",alignSelf:isMobile?"stretch":"flex-end",gridColumn:isMobile?"span 2":"auto"}}>
-              <X size={12}/> Limpar Filtros
+        {/* FILTERS SECTION */}
+        {isMobile ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <button 
+              onClick={() => setFiltersOpen(true)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                width: "100%",
+                padding: "10px 16px",
+                background: "#2563eb",
+                color: "white",
+                border: "none",
+                borderRadius: 8,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: "pointer",
+                boxShadow: "0 2px 6px rgba(37,99,235,0.2)"
+              }}
+            >
+              🔍 Filtrar Lançamentos {hasFilter && `(${[selUnidade.length > 0 ? 1 : 0, selSemaforo !== "all" ? 1 : 0, selAno !== "all" ? 1 : 0, selFonte !== "all" ? 1 : 0].reduce((a,b)=>a+b,0)} ativos)`}
             </button>
+            
+            {/* Filter Pills */}
+            {hasFilter && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
+                {selUnidade.length > 0 && (
+                  <span style={{ fontSize: 10, background: "#eff6ff", color: "#2563eb", padding: "4px 10px", borderRadius: 12, border: "1px solid #bfdbfe", display: "flex", alignItems: "center", gap: 4, fontWeight: 600 }}>
+                    Unid: {selUnidade.length} <X size={12} onClick={() => setSelUnidade([])} style={{ cursor: "pointer" }}/>
+                  </span>
+                )}
+                {selSemaforo !== "all" && (
+                  <span style={{ fontSize: 10, background: "#fef8ec", color: "#b45309", padding: "4px 10px", borderRadius: 12, border: "1px solid #fde68a", display: "flex", alignItems: "center", gap: 4, fontWeight: 600 }}>
+                    Status: {selSemaforo === "verde" ? "Ressarcido" : selSemaforo === "a_ressarcir" ? "A Ressarcir" : "Aguardando Fin."} <X size={12} onClick={() => setSelSemaforo("all")} style={{ cursor: "pointer" }}/>
+                  </span>
+                )}
+                {selAno !== "all" && (
+                  <span style={{ fontSize: 10, background: "#f0fdf4", color: "#16a34a", padding: "4px 10px", borderRadius: 12, border: "1px solid #bbf7d0", display: "flex", alignItems: "center", gap: 4, fontWeight: 600 }}>
+                    Ano: {selAno} <X size={12} onClick={() => setSelAno("all")} style={{ cursor: "pointer" }}/>
+                  </span>
+                )}
+                {selFonte !== "all" && (
+                  <span style={{ fontSize: 10, background: "#faf5ff", color: "#7c3aed", padding: "4px 10px", borderRadius: 12, border: "1px solid #e9d5ff", display: "flex", alignItems: "center", gap: 4, fontWeight: 600 }}>
+                    Origem: {selFonte} <X size={12} onClick={() => setSelFonte("all")} style={{ cursor: "pointer" }}/>
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Bottom Sheet Modal */}
+            {filtersOpen && (
+              <>
+                <div 
+                  onClick={() => setFiltersOpen(false)}
+                  style={{
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    width: "100vw",
+                    height: "100vh",
+                    background: "rgba(0,0,0,0.5)",
+                    zIndex: 1000,
+                    backdropFilter: "blur(2px)"
+                  }}
+                />
+                <div 
+                  style={{
+                    position: "fixed",
+                    bottom: 0,
+                    left: 0,
+                    width: "100vw",
+                    maxHeight: "85vh",
+                    background: "white",
+                    borderTopLeftRadius: 16,
+                    borderTopRightRadius: 16,
+                    boxShadow: "0 -4px 24px rgba(0,0,0,0.15)",
+                    zIndex: 1001,
+                    display: "flex",
+                    flexDirection: "column",
+                    overflow: "hidden"
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px", borderBottom: "1px solid #f1f5f9" }}>
+                    <span style={{ fontWeight: 800, fontSize: 15, color: "#0f172a" }}>Filtrar Dados</span>
+                    <button 
+                      onClick={() => setFiltersOpen(false)}
+                      style={{ background: "transparent", border: "none", color: "#64748b", cursor: "pointer" }}
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+                  
+                  <div style={{ padding: "16px", overflowY: "auto", display: "flex", flexDirection: "column", gap: 16, flex: 1 }}>
+                    <MultiSel label="Unidade / Centro de Custo" opts={unidades} sel={selUnidade} set={setSelUnidade} isMobile={true}/>
+                    
+                    <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                      <span style={{fontSize:11,fontWeight:600,color:"#374151"}}>Status Ressarcimento</span>
+                      <select value={selSemaforo} onChange={e=>setSelSemaforo(e.target.value)}
+                        style={{padding:"8px 12px",border:"1px solid #d1d5db",borderRadius:8,fontSize:12,background:"white",width:"100%"}}>
+                        <option value="all">Todos</option>
+                        <option value="verde">🟢 Ressarcido</option>
+                        <option value="a_ressarcir">🔴 A Ressarcir</option>
+                        <option value="pendente">🟡 Aguardando Financeiro</option>
+                      </select>
+                    </div>
+
+                    <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                      <span style={{fontSize:11,fontWeight:600,color:"#374151"}}>Ano</span>
+                      <select value={selAno} onChange={e=>setSelAno(e.target.value)}
+                        style={{padding:"8px 12px",border:"1px solid #d1d5db",borderRadius:8,fontSize:12,background:"white",width:"100%"}}>
+                        <option value="all">Todos</option>
+                        {anos.map(a=><option key={a} value={String(a)}>{a}</option>)}
+                      </select>
+                    </div>
+
+                    <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                      <span style={{fontSize:11,fontWeight:600,color:"#374151"}}>Origem/Fonte</span>
+                      <select value={selFonte} onChange={e=>setSelFonte(e.target.value)}
+                        style={{padding:"8px 12px",border:"1px solid #d1d5db",borderRadius:8,fontSize:12,background:"white",width:"100%"}}>
+                        <option value="all">Todas as Origens</option>
+                        <option value="TED">Somente TED</option>
+                        <option value="Emenda">Somente Emenda</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div style={{ padding: "16px", borderTop: "1px solid #f1f5f9", display: "flex", gap: 10 }}>
+                    {hasFilter && (
+                      <button 
+                        onClick={() => { setSelUnidade([]); setSelSemaforo("all"); setSelAno("all"); setSelFonte("all"); }}
+                        style={{
+                          flex: 1, padding: "12px", background: "#f1f5f9", color: "#475569", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer"
+                        }}
+                      >
+                        Limpar
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => setFiltersOpen(false)}
+                      style={{
+                        flex: 2, padding: "12px", background: "#2563eb", color: "white", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", textAlign: "center"
+                      }}
+                    >
+                      APLICAR FILTROS
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        ) : (
+          <div style={{
+            ...s.panel,
+            padding:"14px 16px",
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 12,
+            alignItems: "stretch"
+          }}>
+            <div>
+              <MultiSel label="Unidade / Centro de Custo" opts={unidades} sel={selUnidade} set={setSelUnidade} isMobile={false}/>
+            </div>
+            
+            <div style={{display:"flex",flexDirection:"column",gap:3,alignItems:"center"}}>
+              <span style={{fontSize:11,fontWeight:600,color:"#374151"}}>Status Ressarcimento</span>
+              <select value={selSemaforo} onChange={e=>setSelSemaforo(e.target.value)}
+                style={{padding:"4px 10px",border:"1px solid #d1d5db",borderRadius:6,fontSize:11,background:"white",cursor:"pointer",width:168}}>
+                <option value="all">Todos</option>
+                <option value="verde">🟢 Ressarcido</option>
+                <option value="a_ressarcir">🔴 A Ressarcir</option>
+                <option value="pendente">🟡 Aguardando Financeiro</option>
+              </select>
+            </div>
+            
+            <div style={{display:"flex",flexDirection:"column",gap:3,alignItems:"center"}}>
+              <span style={{fontSize:11,fontWeight:600,color:"#374151"}}>Ano</span>
+              <select value={selAno} onChange={e=>setSelAno(e.target.value)}
+                style={{padding:"4px 10px",border:"1px solid #d1d5db",borderRadius:6,fontSize:11,background:"white",cursor:"pointer",width:100}}>
+                <option value="all">Todos</option>
+                {anos.map(a=><option key={a} value={String(a)}>{a}</option>)}
+              </select>
+            </div>
+            
+            <div style={{display:"flex",flexDirection:"column",gap:3,alignItems:"center"}}>
+              <div style={{fontSize:11,fontWeight:600,color:"#374151", display: "flex", gap: 4, alignItems: "center"}}>
+                Origem
+                <span style={{background: "#e2e8f0", color: "#1e293b", padding: "2px 6px", borderRadius: 4, fontSize: 10, fontWeight: 700}}>
+                  {selFonte === "all" ? "TED / EMENDA" : selFonte.toUpperCase()}
+                </span>
+              </div>
+              <select value={selFonte} onChange={e=>setSelFonte(e.target.value)}
+                style={{padding:"4px 10px",border:"1px solid #d1d5db",borderRadius:6,fontSize:11,background:"white",cursor:"pointer",width:160}}>
+                <option value="all">Todas as Origens</option>
+                <option value="TED">Somente TED</option>
+                <option value="Emenda">Somente Emenda</option>
+              </select>
+            </div>
+            
+            {hasFilter&&(
+              <button onClick={()=>{setSelUnidade([]);setSelSemaforo("all");setSelAno("all");setSelFonte("all");}}
+                style={{display:"flex",alignItems:"center",justifyContent:"center",gap:4,padding:"6px 11px",border:"1px solid #d1d5db",borderRadius:6,background:"white",fontSize:11,cursor:"pointer",alignSelf:"flex-end"}}>
+                <X size={12}/> Limpar Filtros
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* KPIs SECTION */}
+        {isMobile ? (
+          <div style={{ ...s.panel, padding: "16px 14px", display: "flex", flexDirection: "column", gap: 14 }}>
+            {(() => {
+              const kpiSlides = [
+                {
+                  title: "📊 Execução Financeira — Tesouro Gerencial",
+                  cards: [
+                    { title: "Total Empenhado", value: fmt(T.empenhado), sub: "base TG", color: "#3b82f6", icon: "📋" },
+                    { title: "Total Pago (TG)", value: fmt(T.pago_tg), sub: pct(T.pago_tg, T.empenhado), color: "#10b981", icon: "💳" },
+                    { title: "Total a Pagar", value: fmt(T.empenhado - T.pago_tg), sub: `${pct(T.empenhado - T.pago_tg, T.empenhado)} do empenhado`, color: "#f59e0b", icon: "⏳" }
+                  ]
+                },
+                {
+                  title: "🤝 Partilha de Custos Indiretos (50% / 50%)",
+                  cards: [
+                    { title: "Pago à Unidade (50%)", value: fmt(T.pago_tg / 2), sub: "Destinado à Unidade Executora", color: "#6366f1", icon: "🏢" },
+                    { title: "Pago à UnB (50%)", value: fmt(T.pago_tg / 2), sub: "Destinado à Administração Central", color: "#ec4899", icon: "🏛️" }
+                  ]
+                },
+                {
+                  title: "🗂️ Controle de Ressarcimento — Base Manual",
+                  cards: [
+                    { title: "Ressarcido (Unidade)", value: fmt(T.ressarcido), sub: pct(T.ressarcido, T.total_ci / 2), color: "#14b8a6", icon: "💰" },
+                    { title: "A Ressarcir (Unidade)", value: fmt(T.a_ressarcir), sub: pct(T.a_ressarcir, T.total_ci / 2), color: "#ef4444", icon: "⚠️" }
+                  ]
+                }
+              ];
+              
+              const current = kpiSlides[activeSlide];
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center" }}>{current.title}</div>
+                  
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {current.cards.map((c, idx) => (
+                      <KpiCard 
+                        key={idx}
+                        title={<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>{c.title} <FonteBadge fonte={selFonte} size="xs" /></span>}
+                        value={c.value}
+                        sub={c.sub}
+                        color={c.color}
+                        icon={c.icon}
+                      />
+                    ))}
+                  </div>
+                  
+                  {/* Slider Indicators */}
+                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, marginTop: 6 }}>
+                    <button 
+                      disabled={activeSlide === 0} 
+                      onClick={() => setActiveSlide(prev => prev - 1)}
+                      style={{
+                        background: "transparent", border: "none", color: activeSlide === 0 ? "#cbd5e1" : "#0f172a", cursor: "pointer", fontSize: 14, fontWeight: 700, padding: "4px 8px"
+                      }}
+                    >
+                      ◀
+                    </button>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {kpiSlides.map((_, i) => (
+                        <span 
+                          key={i} 
+                          onClick={() => setActiveSlide(i)}
+                          style={{
+                            width: 8, height: 8, borderRadius: "50%", background: activeSlide === i ? "#2563eb" : "#cbd5e1", cursor: "pointer", transition: "all 0.2s ease"
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <button 
+                      disabled={activeSlide === kpiSlides.length - 1} 
+                      onClick={() => setActiveSlide(prev => prev + 1)}
+                      style={{
+                        background: "transparent", border: "none", color: activeSlide === kpiSlides.length - 1 ? "#0f172a" : "#cbd5e1", cursor: "pointer", fontSize: 14, fontWeight: 700, padding: "4px 8px"
+                      }}
+                    >
+                      ▶
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        ) : (
+          <>
+            {/* KPIs Row 1 — Tesouro Gerencial */}
+            <div>
+              <div style={{fontSize:11,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>📊 Execução Financeira — Tesouro Gerencial</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(185px,1fr))",gap:10}}>
+                <KpiCard title={<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Total Empenhado <FonteBadge fonte={selFonte} size="xs" /></span>}  value={fmt(T.empenhado)}  sub={`base TG`}                           color="#3b82f6" icon="📋"/>
+                <KpiCard title={<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Total Pago (TG) <FonteBadge fonte={selFonte} size="xs" /></span>}  value={fmt(T.pago_tg)}    sub={pct(T.pago_tg,T.empenhado)}         color="#10b981" icon="💳"/>
+                <KpiCard title={<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Total a Pagar <FonteBadge fonte={selFonte} size="xs" /></span>}    value={fmt(T.empenhado - T.pago_tg)} sub={`${pct(T.empenhado - T.pago_tg,T.empenhado)} do empenhado`} color="#f59e0b" icon="⏳"/>
+              </div>
+            </div>
+
+            {/* KPIs Row 2 — Partilha de Recursos (50% / 50%) */}
+            <div>
+              <div style={{fontSize:11,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>🤝 Partilha de Custos Indiretos (50% / 50%)</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(185px,1fr))",gap:10}}>
+                <KpiCard title={<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Pago à Unidade (50%) <FonteBadge fonte={selFonte} size="xs" /></span>} value={fmt(T.pago_tg / 2)} sub="Destinado à Unidade Executora" color="#6366f1" icon="🏢"/>
+                <KpiCard title={<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Pago à UnB (50%) <FonteBadge fonte={selFonte} size="xs" /></span>}     value={fmt(T.pago_tg / 2)} sub="Destinado à Administração Central" color="#ec4899" icon="🏛️"/>
+              </div>
+            </div>
+
+            {/* KPIs Row 3 — Controle de Ressarcimento — Base Manual */}
+            <div>
+              <div style={{fontSize:11,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>🗂️ Controle de Ressarcimento — Base Manual</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(185px,1fr))",gap:10}}>
+                <KpiCard title={<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Ressarcido (Unidade) <FonteBadge fonte={selFonte} size="xs" /></span>}  value={fmt(T.ressarcido)}  sub={pct(T.ressarcido,T.total_ci / 2)}  color="#14b8a6" icon="💰"/>
+                <KpiCard title={<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>A Ressarcir (Unidade) <FonteBadge fonte={selFonte} size="xs" /></span>} value={fmt(T.a_ressarcir)} sub={pct(T.a_ressarcir,T.total_ci / 2)} color="#ef4444" icon="⚠️"/>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Table / Process Cards */}
+        <div style={isMobile ? undefined : s.panel}>
+          {!isMobile && (
+            <div style={{...s.sectionTitle,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <span style={{display:"flex",alignItems:"center"}}>Tabela Analítica — Processos <FonteBadge fonte={selFonte} size="sm" /></span>
+              <span style={{fontSize:11,color:"#94a3b8",fontWeight:400}}>{filtered.length} registros</span>
+            </div>
           )}
-        </div>
-
-        {/* KPIs Row 1 — Tesouro Gerencial */}
-        <div>
-          <div style={{fontSize:11,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>📊 Execução Financeira — Tesouro Gerencial</div>
-          <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(auto-fit,minmax(185px,1fr))",gap:10}}>
-            <KpiCard title={<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Total Empenhado <FonteBadge fonte={selFonte} size="xs" /></span>}  value={fmt(T.empenhado)}  sub={`base TG`}                           color="#3b82f6" icon="📋"/>
-            <KpiCard title={<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Total Pago (TG) <FonteBadge fonte={selFonte} size="xs" /></span>}  value={fmt(T.pago_tg)}    sub={pct(T.pago_tg,T.empenhado)}         color="#10b981" icon="💳"/>
-            <KpiCard title={<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Total a Pagar <FonteBadge fonte={selFonte} size="xs" /></span>}    value={fmt(T.empenhado - T.pago_tg)} sub={`${pct(T.empenhado - T.pago_tg,T.empenhado)} do empenhado`} color="#f59e0b" icon="⏳"/>
-          </div>
-        </div>
-
-        {/* KPIs Row 2 — Partilha de Recursos (50% / 50%) */}
-        <div>
-          <div style={{fontSize:11,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>🤝 Partilha de Custos Indiretos (50% / 50%)</div>
-          <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(auto-fit,minmax(185px,1fr))",gap:10}}>
-            <KpiCard title={<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Pago à Unidade (50%) <FonteBadge fonte={selFonte} size="xs" /></span>} value={fmt(T.pago_tg / 2)} sub="Destinado à Unidade Executora" color="#6366f1" icon="🏢"/>
-            <KpiCard title={<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Pago à UnB (50%) <FonteBadge fonte={selFonte} size="xs" /></span>}     value={fmt(T.pago_tg / 2)} sub="Destinado à Administração Central" color="#ec4899" icon="🏛️"/>
-          </div>
-        </div>
-
-        {/* KPIs Row 3 — Controle de Ressarcimento — Base Manual */}
-        <div>
-          <div style={{fontSize:11,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>🗂️ Controle de Ressarcimento — Base Manual</div>
-          <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(auto-fit,minmax(185px,1fr))",gap:10}}>
-            <KpiCard title={<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Ressarcido (Unidade) <FonteBadge fonte={selFonte} size="xs" /></span>}  value={fmt(T.ressarcido)}  sub={pct(T.ressarcido,T.total_ci / 2)}  color="#14b8a6" icon="💰"/>
-            <KpiCard title={<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>A Ressarcir (Unidade) <FonteBadge fonte={selFonte} size="xs" /></span>} value={fmt(T.a_ressarcir)} sub={pct(T.a_ressarcir,T.total_ci / 2)} color="#ef4444" icon="⚠️"/>
-          </div>
-        </div>
-
-
-
-        {/* Main Table */}
-        <div style={s.panel}>
-          <div style={{...s.sectionTitle,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <span style={{display:"flex",alignItems:"center"}}>Tabela Analítica — Processos <FonteBadge fonte={selFonte} size="sm" /></span>
-            <span style={{fontSize:11,color:"#94a3b8",fontWeight:400}}>{filtered.length} registros</span>
-          </div>
-          <div style={{overflowX:"auto"}}>
+          
+          {isMobile ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 6px" }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>Processos e Lançamentos</span>
+                <span style={{ fontSize: 11, color: "#94a3b8" }}>{filtered.length} registros</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {filtered.map((d: any, idx: number) => {
+                  const statusKey = getRecordStatus(d);
+                  const sem = SEMAFOR[statusKey] || SEMAFOR.pendente;
+                  const { aRessarcirVal, ressarcidoVal } = calcUnidadeValues(d);
+                  return (
+                    <ProcessCard key={idx} d={d} sem={sem} aRessarcirVal={aRessarcirVal} ressarcidoVal={ressarcidoVal} />
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div style={{overflowX:"auto"}}>
             <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
               <thead>
                 <tr style={{background:"#f8fafc"}}>
@@ -393,6 +760,7 @@ export default function App() {
               </tbody>
             </table>
           </div>
+          )}
         </div>
       </div>
       )}
