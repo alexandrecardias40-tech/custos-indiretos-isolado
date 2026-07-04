@@ -54,12 +54,103 @@ export function getRecordStatus(d: any) {
 
 
 function MultiSel({label,opts,sel,set,isMobile}:{label:string;opts:string[];sel:string[];set:(v:string[])=>void;isMobile?:boolean}) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (isMobile) {
+    return (
+      <div style={{display:"flex",flexDirection:"column",gap:4,width:"100%"}}>
+        <span style={{fontSize:11,fontWeight:600,color:"#374151"}}>{label}</span>
+        <button 
+          onClick={() => setExpanded(!expanded)}
+          style={{
+            display:"flex",
+            alignItems:"center",
+            justifyContent:"space-between",
+            padding:"8px 12px",
+            border:"1px solid #d1d5db",
+            borderRadius:8,
+            background:"white",
+            fontSize:12,
+            cursor:"pointer",
+            width:"100%"
+          }}
+        >
+          <span style={{fontWeight:600, color:"#1e293b"}}>{sel.length>0?`${sel.length} selecionado(s)`:"Todos"}</span>
+          <span style={{fontSize:10, color:"#64748b"}}>{expanded ? "▲" : "▼"}</span>
+        </button>
+        {expanded && (
+          <div style={{
+            border:"1px solid #e2e8f0",
+            borderRadius:8,
+            padding:10,
+            maxHeight:"200px",
+            overflowY:"auto",
+            background:"#f8fafc",
+            display:"flex",
+            flexDirection:"column",
+            gap:8,
+            marginTop:4
+          }}>
+            {opts.length>0&&(
+              <div 
+                onClick={()=>set(sel.length===opts.length?[]:[...opts])}
+                style={{
+                  display:"flex",
+                  alignItems:"center",
+                  gap:8,
+                  padding:"6px 8px",
+                  borderRadius:4,
+                  background:"#eff6ff",
+                  cursor:"pointer",
+                  fontSize:11,
+                  fontWeight:700,
+                  color:"#2563eb"
+                }}
+              >
+                <input 
+                  type="checkbox" 
+                  checked={sel.length===opts.length&&opts.length>0} 
+                  readOnly 
+                  style={{cursor:"pointer"}}
+                />
+                <span>Selecionar Todos</span>
+              </div>
+            )}
+            {opts.map(o=>(
+              <div 
+                key={o}
+                onClick={()=>set(sel.includes(o)?sel.filter(x=>x!==o):[...sel,o])}
+                style={{
+                  display:"flex",
+                  alignItems:"center",
+                  gap:8,
+                  padding:"4px 8px",
+                  cursor:"pointer",
+                  fontSize:11,
+                  color:"#374151"
+                }}
+              >
+                <input 
+                  type="checkbox" 
+                  checked={sel.includes(o)} 
+                  readOnly 
+                  style={{cursor:"pointer"}}
+                />
+                <span>{o}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div style={{display:"flex",flexDirection:"column",gap:3,alignItems:isMobile?"stretch":"center",width:isMobile?"100%":"auto"}}>
-      <span style={{fontSize:11,fontWeight:600,color:"#374151",textAlign:isMobile?"left":"center"}}>{label}</span>
+    <div style={{display:"flex",flexDirection:"column",gap:3,alignItems:"center",width:"auto"}}>
+      <span style={{fontSize:11,fontWeight:600,color:"#374151"}}>{label}</span>
       <Popover>
         <PopoverTrigger asChild>
-          <button style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"4px 10px",border:"1px solid #d1d5db",borderRadius:6,background:"white",fontSize:11,cursor:"pointer",width:isMobile?"100%":168,gap:4}}>
+          <button style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"4px 10px",border:"1px solid #d1d5db",borderRadius:6,background:"white",fontSize:11,cursor:"pointer",width:168,gap:4}}>
             <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sel.length>0?`${sel.length} selecionado(s)`:"Todos"}</span>
             <ChevronDown size={13} style={{opacity:0.5,flexShrink:0}}/>
           </button>
@@ -175,7 +266,7 @@ function ProcessCard({ d, sem, aRessarcirVal, ressarcidoVal }: { d: any; sem: an
           {sem.icon} {sem.label}
         </span>
         <span style={{ fontSize: 11, color: "#6366f1", fontWeight: 700 }}>
-          {d.ne_key || "NE s/ Código"}
+          {d.ne_key ? `NE: ${d.ne_key}` : "Sem NE"}
         </span>
       </div>
 
@@ -622,12 +713,25 @@ export default function App() {
                       disabled={activeSlide === 0} 
                       onClick={() => setActiveSlide(prev => prev - 1)}
                       style={{
-                        background: "transparent", border: "none", color: activeSlide === 0 ? "#cbd5e1" : "#0f172a", cursor: "pointer", fontSize: 14, fontWeight: 700, padding: "4px 8px"
+                        background: activeSlide === 0 ? "#f1f5f9" : "#eff6ff",
+                        border: activeSlide === 0 ? "1px solid #e2e8f0" : "1px solid #bfdbfe",
+                        borderRadius: "50%",
+                        width: 34,
+                        height: 34,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: activeSlide === 0 ? "#94a3b8" : "#2563eb",
+                        cursor: activeSlide === 0 ? "default" : "pointer",
+                        fontSize: 11,
+                        fontWeight: 900,
+                        boxShadow: activeSlide === 0 ? "none" : "0 2px 4px rgba(37,99,235,0.08)",
+                        transition: "all 0.2s ease"
                       }}
                     >
                       ◀
                     </button>
-                    <div style={{ display: "flex", gap: 6 }}>
+                    <div style={{ display: "flex", gap: 8 }}>
                       {kpiSlides.map((_, i) => (
                         <span 
                           key={i} 
@@ -642,7 +746,20 @@ export default function App() {
                       disabled={activeSlide === kpiSlides.length - 1} 
                       onClick={() => setActiveSlide(prev => prev + 1)}
                       style={{
-                        background: "transparent", border: "none", color: activeSlide === kpiSlides.length - 1 ? "#0f172a" : "#cbd5e1", cursor: "pointer", fontSize: 14, fontWeight: 700, padding: "4px 8px"
+                        background: activeSlide === kpiSlides.length - 1 ? "#f1f5f9" : "#eff6ff",
+                        border: activeSlide === kpiSlides.length - 1 ? "1px solid #e2e8f0" : "1px solid #bfdbfe",
+                        borderRadius: "50%",
+                        width: 34,
+                        height: 34,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: activeSlide === kpiSlides.length - 1 ? "#94a3b8" : "#2563eb",
+                        cursor: activeSlide === kpiSlides.length - 1 ? "default" : "pointer",
+                        fontSize: 11,
+                        fontWeight: 900,
+                        boxShadow: activeSlide === kpiSlides.length - 1 ? "none" : "0 2px 4px rgba(37,99,235,0.08)",
+                        transition: "all 0.2s ease"
                       }}
                     >
                       ▶
@@ -741,7 +858,7 @@ export default function App() {
                         <div style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:10,color:"#374151"}} title={d.sei}>{d.sei||"—"}</div>
                         {d.num_ted&&<div style={{fontSize:9,color:"#94a3b8"}}>{String(d.num_ted).toLowerCase().startsWith(String(d.fonte).toLowerCase()) ? d.num_ted : `${d.fonte}: ${d.num_ted}`}</div>}
                       </td>
-                      <td style={s.td}><span style={{fontSize:10,color:"#6366f1",fontWeight:600}}>{d.ne_key||"—"}</span></td>
+                      <td style={s.td}><span style={{fontSize:10,color:"#6366f1",fontWeight:600}}>{d.ne_key ? `NE: ${d.ne_key}` : "—"}</span></td>
                       <td style={{...s.td,fontWeight:600}}>{d.empenhado>0?fmtK(d.empenhado):"—"}</td>
 
                       <td style={s.td}>{d.total_pago_tg>0?fmtK(d.total_pago_tg):"—"}</td>

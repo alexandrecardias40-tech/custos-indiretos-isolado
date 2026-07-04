@@ -51,6 +51,20 @@ export default function CINetworkChart({
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  
+  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const isMobileSize = windowWidth <= 768;
+  const viewBoxW = isMobileSize ? 550 : 1200;
+  const viewBoxH = isMobileSize ? 550 : 680;
+  const cx = viewBoxW / 2;
+  const cy = viewBoxH / 2;
 
   useEffect(() => {
     let af = 0;
@@ -99,9 +113,9 @@ export default function CINetworkChart({
   };
 
   const stars = useMemo(() => Array.from({ length: 260 }, (_, i) => ({
-    id: i, x: seed(i + 11) * W, y: seed(i + 73) * H,
+    id: i, x: seed(i + 11) * viewBoxW, y: seed(i + 73) * viewBoxH,
     r: 0.3 + seed(i + 131) * 1.7, phase: seed(i + 211) * Math.PI * 2, int: 0.15 + seed(i + 271) * 0.85
-  })), []);
+  })), [viewBoxW, viewBoxH]);
 
   const nodes = useMemo<NetworkNode[]>(() => {
     const ordered = [...(data || [])].sort((a, b) => (b.empenhado || 0) - (a.empenhado || 0)).slice(0, MAX);
@@ -149,22 +163,22 @@ export default function CINetworkChart({
       // If overridden (dragged), use that position
       if (nodeOverrides.has(n.id)) { m.set(n.id, nodeOverrides.get(n.id)!); return; }
       if (n.isHub) {
-        m.set(n.id, { x: CX + Math.sin(time * 0.00028) * 14, y: CY - 18 + Math.cos(time * 0.00024) * 8 });
+        m.set(n.id, { x: cx + Math.sin(time * 0.00028) * 14, y: cy - 18 + Math.cos(time * 0.00024) * 8 });
         return;
       }
       // If hovered, freeze at last computed position (stored in frozenPos ref)
       const angle = (n.ringIndex / count) * Math.PI * 2 + time * 0.00014 + Math.sin(time * 0.00043 + n.phase) * 0.11;
-      const r = 190 + (n.ringIndex % 3) * 36;
+      const r = isMobileSize ? (100 + (n.ringIndex % 3) * 20) : (190 + (n.ringIndex % 3) * 36);
       const w = 9 + n.size * 0.16;
       m.set(n.id, {
-        x: CX + Math.cos(angle) * r + Math.sin(time * 0.0011 + n.phase) * w,
-        y: CY + Math.sin(angle) * (r * 0.58) + Math.cos(time * 0.0009 + n.phase) * w * 0.55
+        x: cx + Math.cos(angle) * r + Math.sin(time * 0.0011 + n.phase) * w,
+        y: cy + Math.sin(angle) * (r * (isMobileSize ? 0.7 : 0.58)) + Math.cos(time * 0.0009 + n.phase) * w * 0.55
       });
     });
     return m;
   // hoveredId in deps: when hovered, we snapshot position and stop moving that node
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodes, hoveredId ? null : time, nodeOverrides, hoveredId]);
+  }, [nodes, hoveredId ? null : time, nodeOverrides, hoveredId, cx, cy, isMobileSize]);
 
   const links = useMemo<Link[]>(() => {
     const ring = nodes.filter(n => !n.isHub);
@@ -188,7 +202,7 @@ export default function CINetworkChart({
       style={{ position: 'relative', borderRadius: 0, overflow: 'hidden', background: '#030b1c', cursor: isDragging ? 'grabbing' : 'grab', userSelect: 'none' }}
       onMouseDown={handleBgDown} onMouseMove={handleMouseMove} onMouseUp={handleUp} onMouseLeave={handleUp}
     >
-      <svg ref={svgRef} viewBox={`${-pan.x} ${-pan.y} ${W} ${H}`} width="100%" height={height} preserveAspectRatio="xMidYMid meet">
+      <svg ref={svgRef} viewBox={`${-pan.x} ${-pan.y} ${viewBoxW} ${viewBoxH}`} width="100%" height={height} preserveAspectRatio="xMidYMid meet">
         <defs>
           <radialGradient id="bg-g" cx="50%" cy="45%" r="75%">
             <stop offset="0%" stopColor="#102a58" />
@@ -206,7 +220,7 @@ export default function CINetworkChart({
         </defs>
 
         {/* Space background */}
-        <rect x={-pan.x - W} y={-pan.y - H} width={W * 3} height={H * 3} fill="url(#bg-g)" />
+        <rect x={-pan.x - viewBoxW} y={-pan.y - viewBoxH} width={viewBoxW * 3} height={viewBoxH * 3} fill="url(#bg-g)" />
 
         {/* Stars */}
         {stars.map(s => <circle key={s.id} cx={s.x} cy={s.y} r={s.r} fill="white" opacity={s.int * (0.45 + 0.55 * Math.sin(time * 0.0011 + s.phase))} />)}

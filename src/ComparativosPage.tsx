@@ -160,6 +160,7 @@ export default function ComparativosPage() {
   const [selAno, setSelAno] = useState("all");
   const [selFonte, setSelFonte] = useState("all");
   const [isMobile, setIsMobile] = useState(false);
+  const [activeSlide, setActiveSlide] = useState(0);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -232,25 +233,134 @@ export default function ComparativosPage() {
         </div>
 
         {/* ── KPIs ── */}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))", gap:14 }}>
-          {[
-            { label:<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Total Empenhado <FonteBadge fonte={selFonte} size="xs" /></span>,      value:fmt(D.totEmp),                  color:C.blue,   icon:<span style={{fontSize:15,fontWeight:800}}>R$</span>,    sub:"Base Tesouro Gerencial" },
-            { label:<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Total Pago (TG) <FonteBadge fonte={selFonte} size="xs" /></span>,            value:fmt(D.totPago),                 color:C.green,  icon:<TrendingUp size={16}/>,    sub:pct(D.totPago,D.totEmp)+" do empenhado" },
-            { label:<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Ressarcido (Unid) <FonteBadge fonte={selFonte} size="xs" /></span>,       value:fmt(D.totRess),                 color:C.teal,   icon:<Wallet size={16}/>,        sub:pct(D.totRess,D.totRess+D.totARess)+" do total CI" },
-            { label:<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>A Ressarcir (Unid) <FonteBadge fonte={selFonte} size="xs" /></span>,      value:fmt(D.totARess),                color:C.red,    icon:<AlertTriangle size={16}/>, sub:pct(D.totARess,D.totRess+D.totARess)+" do total CI" },
-            { label:<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Índice Ressarc. <FonteBadge fonte={selFonte} size="xs" /></span>,    value:pct(D.totVerde,filteredData.length),     color:"#0f172a",icon:<Target size={16}/>,        sub:`${D.totVerde} de ${filteredData.length} registros` },
-            { label:<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Pendências <FonteBadge fonte={selFonte} size="xs" /></span>,        value:`${D.totVerm}`,                 color:C.red,    icon:<ArrowUpRight size={16}/>,  sub:"Registros sem ressarcimento" },
-          ].map(k=>(
-            <div key={typeof k.label === 'string' ? k.label : Math.random()} style={{ ...s.card, borderLeft:`4px solid ${k.color}`, padding:"14px 16px" }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:6, gap: 8 }}>
-                <div style={{ fontSize:9, fontWeight:600, color:"#64748b", textTransform:"uppercase", letterSpacing:"0.04em", flex:1, overflow:"hidden" }}>{k.label}</div>
-                <span style={{ color:k.color, opacity:0.7, flexShrink:0 }}>{k.icon}</span>
+        {isMobile ? (
+          <div style={{ ...s.card, padding: "16px 14px", display: "flex", flexDirection: "column", gap: 14 }}>
+            {(() => {
+              const kpiSlides = [
+                {
+                  title: "📊 Execução Financeira — Tesouro Gerencial",
+                  cards: [
+                    { label: <span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Total Empenhado <FonteBadge fonte={selFonte} size="xs" /></span>, value: fmt(D.totEmp), color: C.blue, icon: <span style={{fontSize:15,fontWeight:800}}>R$</span>, sub: "Base Tesouro Gerencial" },
+                    { label: <span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Total Pago (TG) <FonteBadge fonte={selFonte} size="xs" /></span>, value: fmt(D.totPago), color: C.green, icon: <TrendingUp size={16}/>, sub: pct(D.totPago, D.totEmp) + " do empenhado" }
+                  ]
+                },
+                {
+                  title: "🗂️ Controle de Ressarcimento — Base Manual",
+                  cards: [
+                    { label: <span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Ressarcido (Unid) <FonteBadge fonte={selFonte} size="xs" /></span>, value: fmt(D.totRess), color: C.teal, icon: <Wallet size={16}/>, sub: pct(D.totRess, D.totRess + D.totARess) + " do total CI" },
+                    { label: <span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>A Ressarcir (Unid) <FonteBadge fonte={selFonte} size="xs" /></span>, value: fmt(D.totARess), color: C.red, icon: <AlertTriangle size={16}/>, sub: pct(D.totARess, D.totRess + D.totARess) + " do total CI" }
+                  ]
+                },
+                {
+                  title: "🎯 Metas e Pendências",
+                  cards: [
+                    { label: <span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Índice Ressarc. <FonteBadge fonte={selFonte} size="xs" /></span>, value: pct(D.totVerde, filteredData.length), color: "#0f172a", icon: <Target size={16}/>, sub: `${D.totVerde} de ${filteredData.length} registros` },
+                    { label: <span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Pendências <FonteBadge fonte={selFonte} size="xs" /></span>, value: String(D.totVerm), color: C.red, icon: <ArrowUpRight size={16}/>, sub: "Registros sem ressarcimento" }
+                  ]
+                }
+              ];
+
+              const current = kpiSlides[activeSlide % kpiSlides.length];
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center" }}>{current.title}</div>
+                  
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {current.cards.map((c, idx) => (
+                      <div key={idx} style={{ background:"white", borderRadius:10, border:"1px solid #e2e8f0", borderLeft:`4px solid ${c.color}`, boxShadow:"0 1px 4px rgba(0,0,0,0.06)", padding:"12px 14px" }}>
+                        <div style={{ fontSize:9, fontWeight:600, color:"#64748b", letterSpacing:"0.04em", display:"flex", alignItems:"center", justifyContent: "space-between", gap: 8 }}>
+                          <span style={{ fontSize:9, fontWeight:600, color:"#64748b", textTransform:"uppercase", letterSpacing:"0.04em", flex:1 }}>{c.label}</span>
+                          <span style={{ color:c.color, opacity:0.7 }}>{c.icon}</span>
+                        </div>
+                        <div style={{ fontSize:20, fontWeight:800, color:"#0f172a", marginTop:5, lineHeight:1 }}>{c.value}</div>
+                        {c.sub && <div style={{ fontSize:10, color:"#94a3b8", marginTop:4 }}>{c.sub}</div>}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Slider Indicators */}
+                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, marginTop: 6 }}>
+                    <button 
+                      disabled={activeSlide === 0} 
+                      onClick={() => setActiveSlide(prev => prev - 1)}
+                      style={{
+                        background: activeSlide === 0 ? "#f1f5f9" : "#eff6ff",
+                        border: activeSlide === 0 ? "1px solid #e2e8f0" : "1px solid #bfdbfe",
+                        borderRadius: "50%",
+                        width: 34,
+                        height: 34,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: activeSlide === 0 ? "#94a3b8" : "#2563eb",
+                        cursor: activeSlide === 0 ? "default" : "pointer",
+                        fontSize: 11,
+                        fontWeight: 900,
+                        boxShadow: activeSlide === 0 ? "none" : "0 2px 4px rgba(37,99,235,0.08)",
+                        transition: "all 0.2s ease"
+                      }}
+                    >
+                      ◀
+                    </button>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      {kpiSlides.map((_, i) => (
+                        <span 
+                          key={i} 
+                          onClick={() => setActiveSlide(i)}
+                          style={{
+                            width: 8, height: 8, borderRadius: "50%", background: activeSlide === i ? "#2563eb" : "#cbd5e1", cursor: "pointer", transition: "all 0.2s ease"
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <button 
+                      disabled={activeSlide === kpiSlides.length - 1} 
+                      onClick={() => setActiveSlide(prev => prev + 1)}
+                      style={{
+                        background: activeSlide === kpiSlides.length - 1 ? "#f1f5f9" : "#eff6ff",
+                        border: activeSlide === kpiSlides.length - 1 ? "1px solid #e2e8f0" : "1px solid #bfdbfe",
+                        borderRadius: "50%",
+                        width: 34,
+                        height: 34,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: activeSlide === kpiSlides.length - 1 ? "#94a3b8" : "#2563eb",
+                        cursor: activeSlide === kpiSlides.length - 1 ? "default" : "pointer",
+                        fontSize: 11,
+                        fontWeight: 900,
+                        boxShadow: activeSlide === kpiSlides.length - 1 ? "none" : "0 2px 4px rgba(37,99,235,0.08)",
+                        transition: "all 0.2s ease"
+                      }}
+                    >
+                      ▶
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        ) : (
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))", gap:14 }}>
+            {[
+              { label:<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Total Empenhado <FonteBadge fonte={selFonte} size="xs" /></span>,      value:fmt(D.totEmp),                  color:C.blue,   icon:<span style={{fontSize:15,fontWeight:800}}>R$</span>,    sub:"Base Tesouro Gerencial" },
+              { label:<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Total Pago (TG) <FonteBadge fonte={selFonte} size="xs" /></span>,            value:fmt(D.totPago),                 color:C.green,  icon:<TrendingUp size={16}/>,    sub:pct(D.totPago,D.totEmp)+" do empenhado" },
+              { label:<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Ressarcido (Unid) <FonteBadge fonte={selFonte} size="xs" /></span>,       value:fmt(D.totRess),                 color:C.teal,   icon:<Wallet size={16}/>,        sub:pct(D.totRess,D.totRess+D.totARess)+" do total CI" },
+              { label:<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>A Ressarcir (Unid) <FonteBadge fonte={selFonte} size="xs" /></span>,      value:fmt(D.totARess),                color:C.red,    icon:<AlertTriangle size={16}/>, sub:pct(D.totARess,D.totRess+D.totARess)+" do total CI" },
+              { label:<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Índice Ressarc. <FonteBadge fonte={selFonte} size="xs" /></span>,    value:pct(D.totVerde,filteredData.length),     color:"#0f172a",icon:<Target size={16}/>,        sub:`${D.totVerde} de ${filteredData.length} registros` },
+              { label:<span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Pendências <FonteBadge fonte={selFonte} size="xs" /></span>,        value:`${D.totVerm}`,                 color:C.red,    icon:<ArrowUpRight size={16}/>,  sub:"Registros sem ressarcimento" },
+            ].map(k=>(
+              <div key={typeof k.label === 'string' ? k.label : Math.random()} style={{ ...s.card, borderLeft:`4px solid ${k.color}`, padding:"14px 16px" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:6, gap: 8 }}>
+                  <div style={{ fontSize:9, fontWeight:600, color:"#64748b", textTransform:"uppercase", letterSpacing:"0.04em", flex:1, overflow:"hidden" }}>{k.label}</div>
+                  <span style={{ color:k.color, opacity:0.7, flexShrink:0 }}>{k.icon}</span>
+                </div>
+                <div style={{ fontSize:20, fontWeight:800, color:"#0f172a", lineHeight:1 }}>{k.value}</div>
+                <div style={{ fontSize:10, color:"#94a3b8", marginTop:4 }}>{k.sub}</div>
               </div>
-              <div style={{ fontSize:20, fontWeight:800, color:"#0f172a", lineHeight:1 }}>{k.value}</div>
-              <div style={{ fontSize:10, color:"#94a3b8", marginTop:4 }}>{k.sub}</div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* ── Toggle + Bar chart por unidade ── */}
         <div style={{ ...s.card, padding:0, overflow:"hidden" }}>
@@ -408,57 +518,159 @@ export default function ComparativosPage() {
         </div>
 
         {/* ── Mini ranking table ── */}
-        <div style={{ ...s.card, padding:0, overflow:"hidden" }}>
-          <div style={{ padding:"14px 18px", borderBottom:"1px solid #e2e8f0" }}>
+        <div style={isMobile ? undefined : { ...s.card, padding:0, overflow:"hidden" }}>
+          <div style={{ padding:"14px 18px", borderBottom:isMobile?undefined:"1px solid #e2e8f0" }}>
             <div style={s.section}>Ranking de Ressarcimento por Unidade</div>
             <div style={{ fontSize:11, color:"#64748b" }}>Percentual de registros ressarcidos vs total · Top 15</div>
           </div>
-          <div style={{ overflowX:"auto" }}>
-            <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
-              <thead>
-                <tr>
-                  {["#","Unidade","Registros","Empenhado","Ressarcido","A Ressarcir","% Ressarcido","Status"].map(h=>(
-                    <th key={h} style={{ fontSize:10, color:"#64748b", textTransform:"uppercase", letterSpacing:"0.06em", padding:"9px 12px", background:"#f8fafc", borderBottom:"1px solid #e2e8f0", fontWeight:600, textAlign: h==="#"||h==="Registros"?"center":"left" as any }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {D.top12.map((r:any,i:number)=>{
-                  const pctV = r["Ressarcido"]>0||(r["Ressarcido"]+r["A Ressarcir"])>0
-                    ? ((r["Ressarcido"]/(r["Ressarcido"]+r["A Ressarcir"]))*100) : 0;
-                  const barColor = pctV>=80?C.green:pctV>=40?C.amber:C.red;
-                  return (
-                    <tr key={r.name} style={{ background:i%2===0?"white":"#fafbfc" }}>
-                      <td style={{ padding:"9px 12px", textAlign:"center", fontWeight:700, color:"#94a3b8", fontSize:10 }}>#{i+1}</td>
-                      <td style={{ padding:"9px 12px", fontWeight:600, color:"#0f172a", maxWidth:180 }}>
-                        <div style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }} title={r.fullName}>{r.fullName}</div>
-                      </td>
-                      <td style={{ padding:"9px 12px", textAlign:"center", color:"#64748b" }}>{r.registros}</td>
-                      <td style={{ padding:"9px 12px", fontWeight:700, color:C.blue }}>{fmt(r.Empenhado)}</td>
-                      <td style={{ padding:"9px 12px", color:C.teal, fontWeight:600 }}>{fmt(r.Ressarcido)}</td>
-                      <td style={{ padding:"9px 12px", color:r["A Ressarcir"]>0?C.red:"#10b981", fontWeight:600 }}>{r["A Ressarcir"]>0?fmt(r["A Ressarcir"]):"✓"}</td>
-                      <td style={{ padding:"9px 14px", minWidth:120 }}>
-                        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                          <div style={{ flex:1, height:5, background:"#f1f5f9", borderRadius:3, overflow:"hidden" }}>
-                            <div style={{ height:"100%", width:`${pctV}%`, background:barColor, borderRadius:3 }}/>
-                          </div>
-                          <span style={{ fontWeight:700, color:barColor, minWidth:34, fontSize:10 }}>{pctV.toFixed(0)}%</span>
-                        </div>
-                      </td>
-                      <td style={{ padding:"9px 12px" }}>
-                        <span style={{ display:"inline-block", padding:"2px 8px", borderRadius:12, fontSize:10, fontWeight:700,
-                          background:pctV>=80?"#dcfce7":pctV>=40?"#fef9c3":"#fee2e2",
-                          color:pctV>=80?"#166534":pctV>=40?"#713f12":"#991b1b",
-                          border:`1px solid ${pctV>=80?"#86efac":pctV>=40?"#fde047":"#fca5a5"}` }}>
-                          {pctV>=80?"🟢 Em dia":pctV>=40?"🟡 Parcial":"🔴 Crítico"}
+
+          {isMobile ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "4px 2px" }}>
+              {D.top12.map((r:any,i:number)=>{
+                const pctV = r["Ressarcido"]>0||(r["Ressarcido"]+r["A Ressarcir"])>0
+                  ? ((r["Ressarcido"]/(r["Ressarcido"]+r["A Ressarcir"]))*100) : 0;
+                const barColor = pctV>=80?C.green:pctV>=40?C.amber:C.red;
+                const statusBg = pctV>=80?"#dcfce7":pctV>=40?"#fef9c3":"#fee2e2";
+                const statusText = pctV>=80?"#166534":pctV>=40?"#713f12":"#991b1b";
+                const statusBorder = pctV>=80?"#86efac":pctV>=40?"#fde047":"#fca5a5";
+                const statusLabel = pctV>=80?"🟢 Em dia":pctV>=40?"🟡 Parcial":"🔴 Crítico";
+
+                return (
+                  <div key={r.name} style={{
+                    background: "white",
+                    borderRadius: 12,
+                    border: "1px solid #e2e8f0",
+                    padding: "14px 16px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 12,
+                    boxShadow: "0 2px 5px rgba(0,0,0,0.03)"
+                  }}>
+                    {/* Header: Rank, Name, Status */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{
+                          background: "#f1f5f9",
+                          color: "#64748b",
+                          borderRadius: "50%",
+                          width: 24,
+                          height: 24,
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          fontSize: 10,
+                          fontWeight: 800
+                        }}>
+                          #{i+1}
                         </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={r.fullName}>
+                          {r.fullName}
+                        </span>
+                      </div>
+                      <span style={{
+                        display: "inline-block",
+                        padding: "2px 8px",
+                        borderRadius: 12,
+                        fontSize: 9,
+                        fontWeight: 700,
+                        background: statusBg,
+                        color: statusText,
+                        border: `1px solid ${statusBorder}`
+                      }}>
+                        {statusLabel}
+                      </span>
+                    </div>
+
+                    {/* Progress bar and index */}
+                    <div>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#64748b", marginBottom: 4 }}>
+                        <span>Índice de Ressarcimento</span>
+                        <span style={{ fontWeight: 700, color: barColor }}>{pctV.toFixed(0)}%</span>
+                      </div>
+                      <div style={{ height: 6, background: "#f1f5f9", borderRadius: 3, overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${pctV}%`, background: barColor, borderRadius: 3 }}/>
+                      </div>
+                    </div>
+
+                    {/* Stats grid */}
+                    <div style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr 1fr",
+                      background: "#f8fafc",
+                      borderRadius: 8,
+                      padding: "8px 10px",
+                      textAlign: "center",
+                      fontSize: 10,
+                      gap: 6
+                    }}>
+                      <div>
+                        <div style={{ color: "#64748b", marginBottom: 2 }}>Empenhado</div>
+                        <div style={{ fontWeight: 700, color: C.blue }}>{fmt(r.Empenhado)}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: "#64748b", marginBottom: 2 }}>Ressarcido</div>
+                        <div style={{ fontWeight: 700, color: C.teal }}>{fmt(r.Ressarcido)}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: "#64748b", marginBottom: 2 }}>A Ressarcir</div>
+                        <div style={{ fontWeight: 700, color: r["A Ressarcir"]>0?C.red:"#10b981" }}>{r["A Ressarcir"]>0?fmt(r["A Ressarcir"]):"✓"}</div>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 9.5, color: "#94a3b8" }}>
+                      <span>Registros: <strong style={{ color: "#475569" }}>{r.registros}</strong></span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div style={{ overflowX:"auto" }}>
+              <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
+                <thead>
+                  <tr>
+                    {["#","Unidade","Registros","Empenhado","Ressarcido","A Ressarcir","% Ressarcido","Status"].map(h=>(
+                      <th key={h} style={{ fontSize:10, color:"#64748b", textTransform:"uppercase", letterSpacing:"0.06em", padding:"10px 14px", background:"#f8fafc", borderBottom:"1px solid #e2e8f0", fontWeight:600, textAlign: h==="#"||h==="Registros"||h==="% Ressarcido"?"center":"left" as any }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {D.top12.map((r:any,i:number)=>{
+                    const pctV = r["Ressarcido"]>0||(r["Ressarcido"]+r["A Ressarcir"])>0
+                      ? ((r["Ressarcido"]/(r["Ressarcido"]+r["A Ressarcir"]))*100) : 0;
+                    const barColor = pctV>=80?C.green:pctV>=40?C.amber:C.red;
+                    return (
+                      <tr key={r.name} style={{ background:i%2===0?"white":"#fafbfc" }}>
+                        <td style={{ padding:"10px 14px", textAlign:"center", fontWeight:700, color:"#94a3b8", fontSize:10 }}>#{i+1}</td>
+                        <td style={{ padding:"10px 14px", fontWeight:600, color:"#0f172a", maxWidth:200 }}>
+                          <div style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }} title={r.fullName}>{r.fullName}</div>
+                        </td>
+                        <td style={{ padding:"10px 14px", textAlign:"center", color:"#64748b" }}>{r.registros}</td>
+                        <td style={{ padding:"10px 14px", fontWeight:700, color:C.blue }}>{fmt(r.Empenhado)}</td>
+                        <td style={{ padding:"10px 14px", color:C.teal, fontWeight:600 }}>{fmt(r.Ressarcido)}</td>
+                        <td style={{ padding:"10px 14px", color:r["A Ressarcir"]>0?C.red:"#10b981", fontWeight:600 }}>{r["A Ressarcir"]>0?fmt(r["A Ressarcir"]):"✓"}</td>
+                        <td style={{ padding:"10px 14px", minWidth:140 }}>
+                          <div style={{ display:"flex", alignItems:"center", justifyContent: "center", gap:8 }}>
+                            <div style={{ flex:1, height:5, background:"#f1f5f9", borderRadius:3, overflow:"hidden" }}>
+                              <div style={{ height:"100%", width:`${pctV}%`, background:barColor, borderRadius:3 }}/>
+                            </div>
+                            <span style={{ fontWeight:700, color:barColor, minWidth:34, fontSize:10, textAlign:"right" }}>{pctV.toFixed(0)}%</span>
+                          </div>
+                        </td>
+                        <td style={{ padding:"10px 14px" }}>
+                          <span style={{ display:"inline-block", padding:"2px 8px", borderRadius:12, fontSize:10, fontWeight:700,
+                            background:pctV>=80?"#dcfce7":pctV>=40?"#fef9c3":"#fee2e2",
+                            color:pctV>=80?"#166534":pctV>=40?"#713f12":"#991b1b",
+                            border:`1px solid ${pctV>=80?"#86efac":pctV>=40?"#fde047":"#fca5a5"}` }}>
+                            {pctV>=80?"🟢 Em dia":pctV>=40?"🟡 Parcial":"🔴 Crítico"}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
       </div>
