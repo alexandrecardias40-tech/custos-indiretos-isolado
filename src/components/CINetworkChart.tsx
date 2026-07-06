@@ -166,13 +166,20 @@ export default function CINetworkChart({
         m.set(n.id, { x: cx + Math.sin(time * 0.00028) * 14, y: cy - 18 + Math.cos(time * 0.00024) * 8 });
         return;
       }
-      // If hovered, freeze at last computed position (stored in frozenPos ref)
-      const angle = (n.ringIndex / count) * Math.PI * 2 + time * 0.00014 + Math.sin(time * 0.00043 + n.phase) * 0.11;
-      const r = isMobileSize ? (100 + (n.ringIndex % 3) * 20) : (190 + (n.ringIndex % 3) * 36);
-      const w = 9 + n.size * 0.16;
+      
+      const isEven = n.ringIndex % 2 === 0;
+      const angle = (n.ringIndex / count) * Math.PI * 2 + time * 0.00012;
+      
+      // Órbitas em dois anéis alternados para evitar qualquer colisão e sobreposição (ligeiramente mais afastados)
+      const r = isMobileSize 
+        ? (135 + (isEven ? 0 : 40)) 
+        : (255 + (isEven ? 0 : 60));
+        
+      const w = 4 + n.size * 0.05; // Oscilação sutil para um efeito flutuante elegante sem colidir
+      
       m.set(n.id, {
-        x: cx + Math.cos(angle) * r + Math.sin(time * 0.0011 + n.phase) * w,
-        y: cy + Math.sin(angle) * (r * (isMobileSize ? 0.7 : 0.58)) + Math.cos(time * 0.0009 + n.phase) * w * 0.55
+        x: cx + Math.cos(angle) * r + Math.sin(time * 0.0008 + n.phase) * w,
+        y: cy + Math.sin(angle) * (r * (isMobileSize ? 0.72 : 0.6)) + Math.cos(time * 0.0006 + n.phase) * w * 0.5
       });
     });
     return m;

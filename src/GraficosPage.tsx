@@ -101,7 +101,7 @@ function ProcessCard({ d, sem, aRessarcirVal, ressarcidoVal }: { d: any; sem: an
         transition: "all 0.2s ease"
       }}
     >
-      {/* Linha Superior: Status e NE */}
+      {/* Linha Superior: Status e ND */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
         <span style={{
           display: "inline-block",
@@ -116,7 +116,7 @@ function ProcessCard({ d, sem, aRessarcirVal, ressarcidoVal }: { d: any; sem: an
           {sem.label}
         </span>
         <span style={{ fontSize: 11, color: "#6366f1", fontWeight: 700 }}>
-          {d.nd_ressarcimento ? `ND: ${d.nd_ressarcimento}` : "Sem ND"}
+          {d.nd_ressarcimento || d.nc_nd ? `ND: ${d.nd_ressarcimento || d.nc_nd}` : "Sem ND"}
         </span>
       </div>
 
@@ -130,29 +130,37 @@ function ProcessCard({ d, sem, aRessarcirVal, ressarcidoVal }: { d: any; sem: an
         </span>
       </div>
 
-      {/* Valores em micro-grade */}
+      {/* Valores em micro-grade 2x2 */}
       <div style={{
         display: "grid",
-        gridTemplateColumns: "1fr 1fr 1fr",
+        gridTemplateColumns: "1fr 1fr",
         background: "#f8fafc",
         borderRadius: 8,
-        padding: "8px 10px",
-        textAlign: "center",
+        padding: "8px 12px",
         fontSize: 10,
-        gap: 6
+        gap: "8px 12px"
       }}>
         <div>
-          <div style={{ color: "#64748b", marginBottom: 2 }}>Empenhado</div>
-          <div style={{ fontWeight: 700, color: "#1e293b" }}>{d.empenhado > 0 ? fmtK(d.empenhado) : "—"}</div>
+          <div style={{ color: "#64748b", fontSize: 9, marginBottom: 1 }}>Empenhado</div>
+          <div style={{ fontWeight: 700, color: "#1e293b", fontSize: 11 }}>{d.empenhado > 0 ? fmtK(d.empenhado) : "—"}</div>
         </div>
         <div>
-          <div style={{ color: "#64748b", marginBottom: 2 }}>Pago (TG)</div>
-          <div style={{ fontWeight: 700, color: "#1e293b" }}>{d.total_pago_tg > 0 ? fmtK(d.total_pago_tg) : "—"}</div>
+          <div style={{ color: "#64748b", fontSize: 9, marginBottom: 1 }}>Pago (TG)</div>
+          <div style={{ fontWeight: 700, color: "#1e293b", fontSize: 11 }}>{d.total_pago_tg > 0 ? fmtK(d.total_pago_tg) : "—"}</div>
         </div>
         <div>
-          <div style={{ color: "#64748b", marginBottom: 2 }}>Ressarcido</div>
-          <div style={{ fontWeight: 700, color: "#10b981" }}>{ressarcidoVal !== null ? fmtK(ressarcidoVal) : "—"}</div>
+          <div style={{ color: "#0d9488", fontSize: 9, marginBottom: 1, fontWeight: 600 }}>Ressarcido</div>
+          <div style={{ fontWeight: 800, color: "#0d9488", fontSize: 11 }}>{ressarcidoVal !== null ? fmtK(ressarcidoVal) : "—"}</div>
         </div>
+        <div>
+          <div style={{ color: "#e11d48", fontSize: 9, marginBottom: 1, fontWeight: 600 }}>A Ressarcir</div>
+          <div style={{ fontWeight: 800, color: "#e11d48", fontSize: 11 }}>{aRessarcirVal !== null ? fmtK(aRessarcirVal) : "—"}</div>
+        </div>
+      </div>
+
+      {/* Dica interativa para o usuário */}
+      <div style={{ textAlign: "center", fontSize: 9, color: "#94a3b8", marginTop: 8, fontWeight: 600, letterSpacing: "0.02em" }}>
+        {expanded ? "🔼 Toque para recolher" : "🔍 Toque para ver detalhes"}
       </div>
 
       {/* Seção Expandida (Acordeão) */}
@@ -187,9 +195,6 @@ function ProcessCard({ d, sem, aRessarcirVal, ressarcidoVal }: { d: any; sem: an
               <span style={{ fontWeight: 600 }}>Nota de Empenho (NE):</span> {d.ne_key}
             </div>
           )}
-          <div>
-            <span style={{ fontWeight: 600 }}>A Ressarcir:</span> <span style={{ color: "#ef4444", fontWeight: 700 }}>{aRessarcirVal !== null ? fmtK(aRessarcirVal) : "—"}</span>
-          </div>
         </div>
       )}
     </div>
@@ -284,103 +289,38 @@ function DetailPanel({ cc, onBack }: { cc: any; onBack: ()=>void }) {
 
       {/* KPIs principais */}
       {isMobile ? (
-        <div style={{ ...s.card, padding: "16px 14px", display: "flex", flexDirection: "column", gap: 14 }}>
-          {(() => {
-            const kpiSlides = [
-              {
-                title: "📊 Execução Financeira — Tesouro Gerencial",
-                cards: [
-                  { title: "Total Empenhado", value: fmt(stats.empenhado), sub: "Tesouro Gerencial", color: "#3b82f6", icon: "📋" },
-                  { title: "Total Pago (TG)", value: fmt(stats.total_pago_tg), sub: pct(stats.total_pago_tg, stats.empenhado) + " do empenhado", color: "#10b981", icon: "💳" }
-                ]
-              },
-              {
-                title: "🗂️ Controle de Ressarcimento — Base Manual",
-                cards: [
-                  { title: "Ressarcido (Unidade)", value: fmt(stats.ressarcido), sub: "Total acumulado", color: "#14b8a6", icon: "💰" },
-                  { title: "A Ressarcir (Unidade)", value: fmt(stats.a_ressarcir), sub: "Total acumulado", color: "#ef4444", icon: "⚠️" }
-                ]
-              }
-            ];
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, padding: "2px 0", width: "100%", boxSizing: "border-box" }}>
+          <div style={{ background:"white", borderRadius:10, border:"1px solid #e2e8f0", borderLeft:"3.5px solid #3b82f6", boxShadow:"0 2px 4px rgba(0,0,0,0.03)", padding:"8px 10px", display:"flex", flexDirection:"column", justifyContent:"space-between", minHeight:68, boxSizing:"border-box", overflow:"hidden" }}>
+            <div style={{ fontSize:9, fontWeight:700, color:"#64748b", textTransform:"uppercase", letterSpacing:"0.02em", display:"flex", alignItems:"center", gap:3, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+              <span>📋</span> Empenhado
+            </div>
+            <div style={{ fontSize:13.5, fontWeight:800, color:"#0f172a", marginTop:3, lineHeight:1.1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{fmt(stats.empenhado)}</div>
+            <div style={{ fontSize:8.5, color:"#94a3b8", marginTop:2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>Base TG</div>
+          </div>
 
-            const current = kpiSlides[activeSlide % kpiSlides.length];
-            return (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center" }}>{current.title}</div>
-                
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {current.cards.map((c, idx) => (
-                    <div key={idx} style={{ background:"white", borderRadius:10, border:"1px solid #e2e8f0", borderLeft:`4px solid ${c.color}`, boxShadow:"0 1px 4px rgba(0,0,0,0.06)", padding:"12px 14px" }}>
-                      <div style={{ fontSize:9, fontWeight:600, color:"#64748b", letterSpacing:"0.04em", display:"flex", alignItems:"center", gap:4 }}>
-                        <span style={{ fontSize:16 }}>{c.icon}</span> {c.title}
-                      </div>
-                      <div style={{ fontSize:20, fontWeight:800, color:"#0f172a", marginTop:5, lineHeight:1 }}>{c.value}</div>
-                      {c.sub && <div style={{ fontSize:11, color:"#94a3b8", marginTop:4 }}>{c.sub}</div>}
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Slider Indicators */}
-                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, marginTop: 6 }}>
-                  <button 
-                    disabled={activeSlide === 0} 
-                    onClick={() => setActiveSlide(prev => prev - 1)}
-                    style={{
-                      background: activeSlide === 0 ? "#f1f5f9" : "#eff6ff",
-                      border: activeSlide === 0 ? "1px solid #e2e8f0" : "1px solid #bfdbfe",
-                      borderRadius: "50%",
-                      width: 34,
-                      height: 34,
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      color: activeSlide === 0 ? "#94a3b8" : "#2563eb",
-                      cursor: activeSlide === 0 ? "default" : "pointer",
-                      fontSize: 11,
-                      fontWeight: 900,
-                      boxShadow: activeSlide === 0 ? "none" : "0 2px 4px rgba(37,99,235,0.08)",
-                      transition: "all 0.2s ease"
-                    }}
-                  >
-                    ◀
-                  </button>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    {kpiSlides.map((_, i) => (
-                      <span 
-                        key={i} 
-                        onClick={() => setActiveSlide(i)}
-                        style={{
-                          width: 8, height: 8, borderRadius: "50%", background: activeSlide === i ? "#2563eb" : "#cbd5e1", cursor: "pointer", transition: "all 0.2s ease"
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <button 
-                    disabled={activeSlide === kpiSlides.length - 1} 
-                    onClick={() => setActiveSlide(prev => prev + 1)}
-                    style={{
-                      background: activeSlide === kpiSlides.length - 1 ? "#f1f5f9" : "#eff6ff",
-                      border: activeSlide === kpiSlides.length - 1 ? "1px solid #e2e8f0" : "1px solid #bfdbfe",
-                      borderRadius: "50%",
-                      width: 34,
-                      height: 34,
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      color: activeSlide === kpiSlides.length - 1 ? "#94a3b8" : "#2563eb",
-                      cursor: activeSlide === kpiSlides.length - 1 ? "default" : "pointer",
-                      fontSize: 11,
-                      fontWeight: 900,
-                      boxShadow: activeSlide === kpiSlides.length - 1 ? "none" : "0 2px 4px rgba(37,99,235,0.08)",
-                      transition: "all 0.2s ease"
-                    }}
-                  >
-                    ▶
-                  </button>
-                </div>
-              </div>
-            );
-          })()}
+          <div style={{ background:"white", borderRadius:10, border:"1px solid #e2e8f0", borderLeft:"3.5px solid #10b981", boxShadow:"0 2px 4px rgba(0,0,0,0.03)", padding:"8px 10px", display:"flex", flexDirection:"column", justifyContent:"space-between", minHeight:68, boxSizing:"border-box", overflow:"hidden" }}>
+            <div style={{ fontSize:9, fontWeight:700, color:"#64748b", textTransform:"uppercase", letterSpacing:"0.02em", display:"flex", alignItems:"center", gap:3, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+              <span>💳</span> Pago (TG)
+            </div>
+            <div style={{ fontSize:13.5, fontWeight:800, color:"#0f172a", marginTop:3, lineHeight:1.1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{fmt(stats.total_pago_tg)}</div>
+            <div style={{ fontSize:8.5, color:"#94a3b8", marginTop:2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{pct(stats.total_pago_tg, stats.empenhado)} do emp.</div>
+          </div>
+
+          <div style={{ background:"white", borderRadius:10, border:"1px solid #e2e8f0", borderLeft:"3.5px solid #14b8a6", boxShadow:"0 2px 4px rgba(0,0,0,0.03)", padding:"8px 10px", display:"flex", flexDirection:"column", justifyContent:"space-between", minHeight:68, boxSizing:"border-box", overflow:"hidden" }}>
+            <div style={{ fontSize:9, fontWeight:700, color:"#64748b", textTransform:"uppercase", letterSpacing:"0.02em", display:"flex", alignItems:"center", gap:3, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+              <span>💰</span> Ressarcido
+            </div>
+            <div style={{ fontSize:13.5, fontWeight:800, color:"#0f172a", marginTop:3, lineHeight:1.1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{fmt(stats.ressarcido)}</div>
+            <div style={{ fontSize:8.5, color:"#94a3b8", marginTop:2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>Total acumulado</div>
+          </div>
+
+          <div style={{ background:"white", borderRadius:10, border:"1px solid #e2e8f0", borderLeft:"3.5px solid #ef4444", boxShadow:"0 2px 4px rgba(0,0,0,0.03)", padding:"8px 10px", display:"flex", flexDirection:"column", justifyContent:"space-between", minHeight:68, boxSizing:"border-box", overflow:"hidden" }}>
+            <div style={{ fontSize:9, fontWeight:700, color:"#64748b", textTransform:"uppercase", letterSpacing:"0.02em", display:"flex", alignItems:"center", gap:3, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+              <span>⚠️</span> A Ressarcir
+            </div>
+            <div style={{ fontSize:13.5, fontWeight:800, color:"#0f172a", marginTop:3, lineHeight:1.1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{fmt(stats.a_ressarcir)}</div>
+            <div style={{ fontSize:8.5, color:"#94a3b8", marginTop:2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>Total acumulado</div>
+          </div>
         </div>
       ) : (
         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))", gap:12 }}>

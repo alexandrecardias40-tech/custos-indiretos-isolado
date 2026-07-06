@@ -234,111 +234,38 @@ export default function ComparativosPage() {
 
         {/* ── KPIs ── */}
         {isMobile ? (
-          <div style={{ ...s.card, padding: "16px 14px", display: "flex", flexDirection: "column", gap: 14 }}>
-            {(() => {
-              const kpiSlides = [
-                {
-                  title: "📊 Execução Financeira — Tesouro Gerencial",
-                  cards: [
-                    { label: <span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Total Empenhado <FonteBadge fonte={selFonte} size="xs" /></span>, value: fmt(D.totEmp), color: C.blue, icon: <span style={{fontSize:15,fontWeight:800}}>R$</span>, sub: "Base Tesouro Gerencial" },
-                    { label: <span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Total Pago (TG) <FonteBadge fonte={selFonte} size="xs" /></span>, value: fmt(D.totPago), color: C.green, icon: <TrendingUp size={16}/>, sub: pct(D.totPago, D.totEmp) + " do empenhado" }
-                  ]
-                },
-                {
-                  title: "🗂️ Controle de Ressarcimento — Base Manual",
-                  cards: [
-                    { label: <span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Ressarcido (Unid) <FonteBadge fonte={selFonte} size="xs" /></span>, value: fmt(D.totRess), color: C.teal, icon: <Wallet size={16}/>, sub: pct(D.totRess, D.totRess + D.totARess) + " do total CI" },
-                    { label: <span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>A Ressarcir (Unid) <FonteBadge fonte={selFonte} size="xs" /></span>, value: fmt(D.totARess), color: C.red, icon: <AlertTriangle size={16}/>, sub: pct(D.totARess, D.totRess + D.totARess) + " do total CI" }
-                  ]
-                },
-                {
-                  title: "🎯 Metas e Pendências",
-                  cards: [
-                    { label: <span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Índice Ressarc. <FonteBadge fonte={selFonte} size="xs" /></span>, value: pct(D.totVerde, filteredData.length), color: "#0f172a", icon: <Target size={16}/>, sub: `${D.totVerde} de ${filteredData.length} registros` },
-                    { label: <span style={{display:"flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>Pendências <FonteBadge fonte={selFonte} size="xs" /></span>, value: String(D.totVerm), color: C.red, icon: <ArrowUpRight size={16}/>, sub: "Registros sem ressarcimento" }
-                  ]
-                }
-              ];
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, padding: "2px 0", width: "100%", boxSizing: "border-box" }}>
+            <div style={{ background:"white", borderRadius:10, border:"1px solid #e2e8f0", borderLeft:"3.5px solid #3b82f6", boxShadow:"0 2px 4px rgba(0,0,0,0.03)", padding:"8px 10px", display:"flex", flexDirection:"column", justifyContent:"space-between", minHeight:68, boxSizing:"border-box", overflow:"hidden" }}>
+              <div style={{ fontSize:9, fontWeight:700, color:"#64748b", textTransform:"uppercase", letterSpacing:"0.02em", display:"flex", alignItems:"center", gap:3, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                <span>📋</span> Empenhado
+              </div>
+              <div style={{ fontSize:13.5, fontWeight:800, color:"#0f172a", marginTop:3, lineHeight:1.1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{fmt(D.totEmp)}</div>
+              <div style={{ fontSize:8.5, color:"#94a3b8", marginTop:2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>Base TG</div>
+            </div>
 
-              const current = kpiSlides[activeSlide % kpiSlides.length];
-              return (
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center" }}>{current.title}</div>
-                  
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    {current.cards.map((c, idx) => (
-                      <div key={idx} style={{ background:"white", borderRadius:10, border:"1px solid #e2e8f0", borderLeft:`4px solid ${c.color}`, boxShadow:"0 1px 4px rgba(0,0,0,0.06)", padding:"12px 14px" }}>
-                        <div style={{ fontSize:9, fontWeight:600, color:"#64748b", letterSpacing:"0.04em", display:"flex", alignItems:"center", justifyContent: "space-between", gap: 8 }}>
-                          <span style={{ fontSize:9, fontWeight:600, color:"#64748b", textTransform:"uppercase", letterSpacing:"0.04em", flex:1 }}>{c.label}</span>
-                          <span style={{ color:c.color, opacity:0.7 }}>{c.icon}</span>
-                        </div>
-                        <div style={{ fontSize:20, fontWeight:800, color:"#0f172a", marginTop:5, lineHeight:1 }}>{c.value}</div>
-                        {c.sub && <div style={{ fontSize:10, color:"#94a3b8", marginTop:4 }}>{c.sub}</div>}
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {/* Slider Indicators */}
-                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, marginTop: 6 }}>
-                    <button 
-                      disabled={activeSlide === 0} 
-                      onClick={() => setActiveSlide(prev => prev - 1)}
-                      style={{
-                        background: activeSlide === 0 ? "#f1f5f9" : "#eff6ff",
-                        border: activeSlide === 0 ? "1px solid #e2e8f0" : "1px solid #bfdbfe",
-                        borderRadius: "50%",
-                        width: 34,
-                        height: 34,
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        color: activeSlide === 0 ? "#94a3b8" : "#2563eb",
-                        cursor: activeSlide === 0 ? "default" : "pointer",
-                        fontSize: 11,
-                        fontWeight: 900,
-                        boxShadow: activeSlide === 0 ? "none" : "0 2px 4px rgba(37,99,235,0.08)",
-                        transition: "all 0.2s ease"
-                      }}
-                    >
-                      ◀
-                    </button>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      {kpiSlides.map((_, i) => (
-                        <span 
-                          key={i} 
-                          onClick={() => setActiveSlide(i)}
-                          style={{
-                            width: 8, height: 8, borderRadius: "50%", background: activeSlide === i ? "#2563eb" : "#cbd5e1", cursor: "pointer", transition: "all 0.2s ease"
-                          }}
-                        />
-                      ))}
-                    </div>
-                    <button 
-                      disabled={activeSlide === kpiSlides.length - 1} 
-                      onClick={() => setActiveSlide(prev => prev + 1)}
-                      style={{
-                        background: activeSlide === kpiSlides.length - 1 ? "#f1f5f9" : "#eff6ff",
-                        border: activeSlide === kpiSlides.length - 1 ? "1px solid #e2e8f0" : "1px solid #bfdbfe",
-                        borderRadius: "50%",
-                        width: 34,
-                        height: 34,
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        color: activeSlide === kpiSlides.length - 1 ? "#94a3b8" : "#2563eb",
-                        cursor: activeSlide === kpiSlides.length - 1 ? "default" : "pointer",
-                        fontSize: 11,
-                        fontWeight: 900,
-                        boxShadow: activeSlide === kpiSlides.length - 1 ? "none" : "0 2px 4px rgba(37,99,235,0.08)",
-                        transition: "all 0.2s ease"
-                      }}
-                    >
-                      ▶
-                    </button>
-                  </div>
-                </div>
-              );
-            })()}
+            <div style={{ background:"white", borderRadius:10, border:"1px solid #e2e8f0", borderLeft:"3.5px solid #10b981", boxShadow:"0 2px 4px rgba(0,0,0,0.03)", padding:"8px 10px", display:"flex", flexDirection:"column", justifyContent:"space-between", minHeight:68, boxSizing:"border-box", overflow:"hidden" }}>
+              <div style={{ fontSize:9, fontWeight:700, color:"#64748b", textTransform:"uppercase", letterSpacing:"0.02em", display:"flex", alignItems:"center", gap:3, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                <span>💳</span> Pago (TG)
+              </div>
+              <div style={{ fontSize:13.5, fontWeight:800, color:"#0f172a", marginTop:3, lineHeight:1.1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{fmt(D.totPago)}</div>
+              <div style={{ fontSize:8.5, color:"#94a3b8", marginTop:2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{pct(D.totPago, D.totEmp)} do emp.</div>
+            </div>
+
+            <div style={{ background:"white", borderRadius:10, border:"1px solid #e2e8f0", borderLeft:"3.5px solid #14b8a6", boxShadow:"0 2px 4px rgba(0,0,0,0.03)", padding:"8px 10px", display:"flex", flexDirection:"column", justifyContent:"space-between", minHeight:68, boxSizing:"border-box", overflow:"hidden" }}>
+              <div style={{ fontSize:9, fontWeight:700, color:"#64748b", textTransform:"uppercase", letterSpacing:"0.02em", display:"flex", alignItems:"center", gap:3, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                <span>💰</span> Ressarcido
+              </div>
+              <div style={{ fontSize:13.5, fontWeight:800, color:"#0f172a", marginTop:3, lineHeight:1.1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{fmt(D.totRess)}</div>
+              <div style={{ fontSize:8.5, color:"#94a3b8", marginTop:2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{pct(D.totRess, D.totRess + D.totARess)} do tot. CI</div>
+            </div>
+
+            <div style={{ background:"white", borderRadius:10, border:"1px solid #e2e8f0", borderLeft:"3.5px solid #ef4444", boxShadow:"0 2px 4px rgba(0,0,0,0.03)", padding:"8px 10px", display:"flex", flexDirection:"column", justifyContent:"space-between", minHeight:68, boxSizing:"border-box", overflow:"hidden" }}>
+              <div style={{ fontSize:9, fontWeight:700, color:"#64748b", textTransform:"uppercase", letterSpacing:"0.02em", display:"flex", alignItems:"center", gap:3, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                <span>⚠️</span> A Ressarcir
+              </div>
+              <div style={{ fontSize:13.5, fontWeight:800, color:"#0f172a", marginTop:3, lineHeight:1.1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{fmt(D.totARess)}</div>
+              <div style={{ fontSize:8.5, color:"#94a3b8", marginTop:2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{pct(D.totARess, D.totRess + D.totARess)} do tot. CI</div>
+            </div>
           </div>
         ) : (
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))", gap:14 }}>
