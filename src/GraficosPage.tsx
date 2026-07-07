@@ -115,9 +115,11 @@ function ProcessCard({ d, sem, aRessarcirVal, ressarcidoVal }: { d: any; sem: an
         }}>
           {sem.label}
         </span>
-        <span style={{ fontSize: 11, color: "#6366f1", fontWeight: 700 }}>
-          {d.nd_ressarcimento || d.nc_nd ? `ND: ${d.nd_ressarcimento || d.nc_nd}` : "Sem ND"}
-        </span>
+        {sem.label === "Ressarcido" && (d.nd_ressarcimento || d.nc_nd) && (
+          <span style={{ fontSize: 11, color: "#6366f1", fontWeight: 700 }}>
+            ND: {d.nd_ressarcimento || d.nc_nd}
+          </span>
+        )}
       </div>
 
       {/* Linha do Meio: SEI e Unidade */}
