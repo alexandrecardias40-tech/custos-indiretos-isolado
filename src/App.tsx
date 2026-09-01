@@ -265,9 +265,9 @@ function ProcessCard({ d, sem, aRessarcirVal, ressarcidoVal }: { d: any; sem: an
         }}>
           {sem.icon} {sem.label}
         </span>
-        {sem.label === "Ressarcido" && (d.nd_ressarcimento || d.nc_nd) && (
+        {sem.label === "Ressarcido" && d.nd_ressarcimento && (
           <span style={{ fontSize: 11, color: "#6366f1", fontWeight: 700 }}>
-            ND: {d.nd_ressarcimento || d.nc_nd}
+            ND: {d.nd_ressarcimento}
           </span>
         )}
       </div>
@@ -767,10 +767,10 @@ export default function App() {
             </div>
           ) : (
             <div style={{overflowX:"auto"}}>
-            <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
+            <table style={{width:"100%",borderCollapse:"collapse",fontSize:10}}>
               <thead>
                 <tr style={{background:"#f8fafc"}}>
-                  {["Status","Fonte","Unidade","Processo SEI (Ressarcimento C.I.)","NE","Empenhado","Pago (TG)","A Ressarcir (Unidade)","Ressarcido (Unidade)"].map(h=>(
+                  {["Status","Fonte","Unidade","Processo SEI (Ressarcimento C.I.)","NE","ND","Empenhado","Pago (TG)","A Ressarcir (Unidade)","Ressarcido (Unidade)"].map(h=>(
                     <th key={h} style={s.th}>{h}</th>
                   ))}
                 </tr>
@@ -779,24 +779,26 @@ export default function App() {
                 {filtered.map((d:any,i:number)=>{
                   const statusKey = getRecordStatus(d);
                   const sem = SEMAFOR[statusKey]||SEMAFOR.pendente;
+                  const nd = d.nd_ressarcimento || "—";
                   return (
                     <tr key={i} style={{background:i%2===0?"white":"#fafafa"}}>
                       <td style={s.td}>
-                        <span style={{display:"inline-block",padding:"2px 7px",borderRadius:12,border:`1px solid ${sem.border}`,background:sem.bg,color:sem.color,fontSize:10,fontWeight:700,whiteSpace:"nowrap"}}>
+                        <span style={{display:"inline-block",padding:"2px 7px",borderRadius:12,border:`1px solid ${sem.border}`,background:sem.bg,color:sem.color,fontSize:9,fontWeight:700,whiteSpace:"nowrap"}}>
                           {sem.icon} {sem.label}
                         </span>
                       </td>
                       <td style={s.td}>
-                        <span style={{background: d.fonte==="TED"?"#eff6ff":"#fdf4ff", color: d.fonte==="TED"?"#3b82f6":"#d946ef", padding:"2px 6px", borderRadius:4, fontSize:10, fontWeight:600}}>
+                        <span style={{background: d.fonte==="TED"?"#eff6ff":"#fdf4ff", color: d.fonte==="TED"?"#3b82f6":"#d946ef", padding:"2px 6px", borderRadius:4, fontSize:9, fontWeight:600}}>
                           {d.fonte}
                         </span>
                       </td>
                       <td style={s.td}><span style={{fontWeight:600,color:"#0f172a"}}>{d.centro_custo||"—"}</span></td>
                       <td style={{...s.td,maxWidth:200}}>
-                        <div style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:10,color:"#374151"}} title={d.sei}>{d.sei||"—"}</div>
-                        {d.num_ted&&<div style={{fontSize:9,color:"#94a3b8"}}>{String(d.num_ted).toLowerCase().startsWith(String(d.fonte).toLowerCase()) ? d.num_ted : `${d.fonte}: ${d.num_ted}`}</div>}
+                        <div style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:9,color:"#374151"}} title={d.sei}>{d.sei||"—"}</div>
+                        {d.num_ted&&<div style={{fontSize:8,color:"#94a3b8"}}>{String(d.num_ted).toLowerCase().startsWith(String(d.fonte).toLowerCase()) ? d.num_ted : `${d.fonte}: ${d.num_ted}`}</div>}
                       </td>
-                      <td style={s.td}><span style={{fontSize:10,color:"#6366f1",fontWeight:600}}>{d.ne_key ? `NE: ${d.ne_key}` : "—"}</span></td>
+                      <td style={s.td}><span style={{fontSize:9,color:"#6366f1",fontWeight:600}}>{d.ne_key ? `NE: ${d.ne_key}` : "—"}</span></td>
+                      <td style={s.td}><span style={{fontSize:9,color:"#f59e0b",fontWeight:600}}>{nd !== "—" ? `ND: ${nd}` : "—"}</span></td>
                       <td style={{...s.td,fontWeight:600}}>{d.empenhado>0?fmtK(d.empenhado):"—"}</td>
 
                       <td style={s.td}>{d.total_pago_tg>0?fmtK(d.total_pago_tg):"—"}</td>
